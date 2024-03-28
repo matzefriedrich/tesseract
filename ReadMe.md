@@ -1,46 +1,33 @@
-A .NET wrapper for [tesseract-ocr] 5.2.0.
+This project is a fork of the https://github.com/charlesw/tesseract repository.
 
-## Dependencies
+**The solution has been migrated to .NET 8.0**, and ...
+ * conditional compilation symbols have been removed.
+ * The code has been cleaned and reformated to automatically adopt the latest syntax sugar. Thus, the project is no longer compatible with its upstream source. If you must rely on an already-known upgrade path, stick to the original project instead.
+ * support for Tesseract.Drawing has been removed (might get restored).
 
-### Visual Studio 2019 x86 and x64 Runtimes
+**The aim of this fork** is..
+ * having a project that works with the latest .NET Framework version (because .NET 4.8 and .NET Core 3.1 are dowdy).
+ * the dynamic runtime approach (based on DotNetInterop) is excellent, but it is overhead and adds complexity I´d like to eliminate.
+ * to align the wrapper API with SOTA concepts as found in modern .NET applications
+   * no hidden dependencies; consistent usage of DI, and no more singletons
+   * adoption of the module system introduced by .NET Core (improved separation of concerns, reliable abstractions, interfaces, and primitive types)
 
-Since tesseract and leptonica binaries are compiled with Visual Studio 2019 you'll need to ensure you have the
-[Visual Studio 2019 Runtime][vs-runtime] installed.
+## Prerequisites
 
-### Tesseract language data
+ * Visual Studio 2022, or Jetbrains Rider 2023+
+ * Visual Studio 2019 C++ runtime; see https://visualstudio.microsoft.com/downloads/
+ * Tesseract language files; see https://github.com/tesseract-ocr/tessdata/
 
-You will also need to download the language data files for tesseract 4.0.0 or above from [tesseract-tessdata].
+## Build
 
-## Docs
+Run the following command from the Visual Studio command prompt to restore referenced Nuget packages and build the projects: 
 
-See [./docs/ReadMe.md](./docs/ReadMe.md)
+````bash
+$ cd src
+$ msbuild ./Tesseract.sln /p:Configuration=Release
+````
 
-## Getting started quickly
 
-1. Add the ``Tesseract`` NuGet Package by running ``Install-Package Tesseract`` from
-   the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console).
-2. (Optional) Add the ``Tesseract.Drawing`` NuGet package to support interop with ``System.Drawing`` in .NET Core, for
-   instance to allow passing Bitmap to Tesseract
-3. Ensure you have Visual Studio 2019 x86 & x64 runtimes installed (see note above).
-4. Download language data files for tesseract 4.00 from
-   the [tessdata repository](https://github.com/tesseract-ocr/tessdata_fast) and add them to your project,
-   ensure 'Copy to output directory' is set to Always.
-5. Check out the Samples solution ``~/src/Tesseract.Samples.sln`` in
-   the [tesseract-samples](https://github.com/charlesw/tesseract-samples) repository for a working example.
-
-If you run into any issues please check out [this](https://github.com/charlesw/tesseract/wiki/Errors) wiki page which
-details a number common issues and some potential solutions.
-
-## Support
-
-Please only file issues for bugs.
-
-If you have any questions or feature/improvement ideas please ask them on
-our [forum](https://github.com/charlesw/tesseract/discussions).
-
-## Note for contributors
-
-Please create your pull requests to target the "Master" branch.
 
 ## License
 
@@ -57,17 +44,16 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-### InteropDotNet
+#### InteropDotNet
 
 Copyright 2014 Andrey Akinshin
 Project URL: https://github.com/AndreyAkinshin/InteropDotNet
 Distributed under the MIT License: http://opensource.org/licenses/MIT
 
-## Core Team
+
+### Contributors
 
 * [charlesw](https://github.com/charlesw) (Charles Weld)
-
-## Contributors
 
 A big thanks to GitHub and all of Tesseract's contributors:
 
@@ -91,7 +77,3 @@ Also thanks to the following projects\resources without which this project would
 [apache2]: http://www.apache.org/licenses/LICENSE-2.0
 
 [tesseract-ocr]: https://github.com/tesseract-ocr/tesseract
-
-[tesseract-tessdata]: https://github.com/tesseract-ocr/tessdata/
-
-[vs-runtime]: https://visualstudio.microsoft.com/downloads/
