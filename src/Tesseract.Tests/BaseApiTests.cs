@@ -1,16 +1,15 @@
-﻿using NUnit.Framework;
-using System;
-using System.Diagnostics;
-
-namespace Tesseract.Tests
+﻿namespace Tesseract.Tests
 {
+    using Interop;
+    using NUnit.Framework;
+
     [TestFixture]
     public class BaseApiTests
     {
         [Test]
         public void CanGetVersion()
         {
-            var version = Interop.TessApi.BaseApiGetVersion();
+            string version = TessApi.BaseApiGetVersion();
             Assert.That(version, Does.StartWith("5.0.0"));
         }
     }

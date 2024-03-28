@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-
-namespace Tesseract.Tests
+﻿namespace Tesseract.Tests
 {
+    using System;
+    using System.Diagnostics;
+    using System.Linq;
+
     public static class TestUtils
     {
         /// <summary>
-        /// Normalise new line characters to unix (\n) so they are all the same.
+        ///     Normalise new line characters to unix (\n) so they are all the same.
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
@@ -26,7 +24,7 @@ namespace Tesseract.Tests
             ProcessStartInfo processInfo;
             Process process;
 
-            var argumentStr = String.Join(" ", arguments.Select(x => $"\"{x}\""));
+            string argumentStr = string.Join(" ", arguments.Select(x => $"\"{x}\""));
             processInfo = new ProcessStartInfo(command, argumentStr);
             processInfo.CreateNoWindow = true;
             processInfo.UseShellExecute = false;
@@ -44,9 +42,9 @@ namespace Tesseract.Tests
 
             exitCode = process.ExitCode;
 
-            Console.WriteLine("output>>" + (String.IsNullOrEmpty(output) ? "(none)" : output));
-            Console.WriteLine("error>>" + (String.IsNullOrEmpty(error) ? "(none)" : error));
-            Console.WriteLine("ExitCode: " + exitCode.ToString(), "ExecuteCommand");
+            Console.WriteLine("output>>" + (string.IsNullOrEmpty(output) ? "(none)" : output));
+            Console.WriteLine("error>>" + (string.IsNullOrEmpty(error) ? "(none)" : error));
+            Console.WriteLine("ExitCode: " + exitCode, "ExecuteCommand");
             process.Close();
         }
     }

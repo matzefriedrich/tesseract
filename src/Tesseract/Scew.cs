@@ -1,58 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Tesseract
+﻿namespace Tesseract
 {
     public struct Scew
     {
-        private float angle;
-        private float confidence;
-
         public Scew(float angle, float confidence)
         {
-            this.angle = angle;
-            this.confidence = confidence;
+            this.Angle = angle;
+            this.Confidence = confidence;
         }
 
-        public float Angle
-        {
-            get { return angle; }
-        }
+        public float Angle { get; }
 
 
-        public float Confidence
-        {
-            get { return confidence; }
-        }
+        public float Confidence { get; }
 
         #region ToString
 
         public override string ToString()
         {
-            return String.Format("Scew: {0} [conf: {1}]", Angle, Confidence);
+            return string.Format("Scew: {0} [conf: {1}]", this.Angle, this.Confidence);
         }
 
         #endregion
 
         #region Equals and GetHashCode implementation
+
         public override bool Equals(object obj)
         {
-            return (obj is Scew) && Equals((Scew)obj);
+            return obj is Scew && this.Equals((Scew)obj);
         }
 
         public bool Equals(Scew other)
         {
-            return this.confidence == other.confidence && this.angle == other.angle;
+            return this.Confidence == other.Confidence && this.Angle == other.Angle;
         }
 
         public override int GetHashCode()
         {
-            int hashCode = 0;
-            unchecked {
-                hashCode += 1000000007 * angle.GetHashCode();
-                hashCode += 1000000009 * confidence.GetHashCode();
+            var hashCode = 0;
+            unchecked
+            {
+                hashCode += 1000000007 * this.Angle.GetHashCode();
+                hashCode += 1000000009 * this.Confidence.GetHashCode();
             }
+
             return hashCode;
         }
 
@@ -65,7 +55,7 @@ namespace Tesseract
         {
             return !(lhs == rhs);
         }
+
         #endregion
-        
     }
 }

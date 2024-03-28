@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Tesseract
 {
     // The .NET equivalent of the ccstruct/fontinfo.h
@@ -15,23 +12,23 @@ namespace Tesseract
             bool isSerif, bool isFraktur = false
         )
         {
-            Name = name;
-            Id = id;
+            this.Name = name;
+            this.Id = id;
 
-            IsItalic     = isItalic;
-            IsBold       = isBold;
-            IsFixedPitch = isFixedPitch;
-            IsSerif      = isSerif;
-            IsFraktur    = isFraktur;
+            this.IsItalic = isItalic;
+            this.IsBold = isBold;
+            this.IsFixedPitch = isFixedPitch;
+            this.IsSerif = isSerif;
+            this.IsFraktur = isFraktur;
         }
 
         public string Name { get; private set; }
 
-        public int  Id           { get; private set; }
-        public bool IsItalic     { get; private set; }
-        public bool IsBold       { get; private set; }
+        public int Id { get; private set; }
+        public bool IsItalic { get; private set; }
+        public bool IsBold { get; private set; }
         public bool IsFixedPitch { get; private set; }
-        public bool IsSerif      { get; private set; }
-        public bool IsFraktur    { get; private set; }
+        public bool IsSerif { get; private set; }
+        public bool IsFraktur { get; private set; }
     }
 }

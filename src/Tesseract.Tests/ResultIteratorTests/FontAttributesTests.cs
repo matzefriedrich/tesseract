@@ -1,45 +1,43 @@
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Tesseract.Tests.ResultIteratorTests
 {
+    using Interop;
+    using NUnit.Framework;
+
     [TestFixture]
     public class FontAttributesTests : TesseractTestBase
     {
-        private TesseractEngine Engine { get; set; }
-        private Pix TestImage { get; set; }
-
         [SetUp]
         public void Init()
         {
-            Engine = CreateEngine(mode: EngineMode.TesseractOnly);
-            TestImage = LoadTestPix("Ocr/Fonts.tif");
+            this.Engine = CreateEngine(mode: EngineMode.TesseractOnly);
+            this.TestImage = LoadTestPix("Ocr/Fonts.tif");
         }
 
         [TearDown]
         public void Dispose()
         {
-            if (TestImage != null) {
-                TestImage.Dispose();
-                TestImage = null;
+            if (this.TestImage != null)
+            {
+                this.TestImage.Dispose();
+                this.TestImage = null;
             }
 
-            if (Engine != null) {
-                Engine.Dispose();
-                Engine = null;
+            if (this.Engine != null)
+            {
+                this.Engine.Dispose();
+                this.Engine = null;
             }
         }
 
-        #region Tests
+        private TesseractEngine Engine { get; set; }
+        private Pix TestImage { get; set; }
+
         [Test]
         public void GetWordFontAttributesWorks()
         {
-            using (var page = Engine.Process(TestImage))
-            using (var iter = page.GetIterator()) {
+            using (Page page = this.Engine.Process(this.TestImage))
+            using (ResultIterator iter = page.GetIterator())
+            {
                 // font attributes come in this order in the test image:
                 // bold, italic, monospace, serif, smallcaps
                 //
@@ -47,7 +45,7 @@ namespace Tesseract.Tests.ResultIteratorTests
                 // hard-coded to "false".  See: https://github.com/tesseract-ocr/tesseract/blob/3.04/ccmain/ltrresultiterator.cpp#182
                 // Note: GetWordFontAttributes returns null if font failed to be resolved (https://github.com/charlesw/tesseract/issues/607)
 
-                var fontAttrs = iter.GetWordFontAttributes();
+                FontAttributes fontAttrs = iter.GetWordFontAttributes();
                 Assert.That(fontAttrs.FontInfo.IsBold, Is.True);
                 Assert.That(iter.GetWordRecognitionLanguage(), Is.EqualTo("eng"));
                 //Assert.That(iter.GetWordIsFromDictionary(), Is.True);
@@ -82,6 +80,5 @@ namespace Tesseract.Tests.ResultIteratorTests
                 Assert.That(iter.GetSymbolIsSubscript(), Is.True);
             }
         }
-        #endregion Tests
     }
 }

@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Tesseract.Tests
+﻿namespace Tesseract.Tests
 {
+    using System;
+
     /// <summary>
-	/// Represents a test run.
-	/// </summary>
-	public class TestRun
+    ///     Represents a test run.
+    /// </summary>
+    public class TestRun
     {
+        public static readonly TestRun Current = new();
+
         private TestRun()
         {
-            StartedAt = DateTime.Now;
+            this.StartedAt = DateTime.Now;
         }
 
         public DateTime StartedAt { get; private set; }
-
-        public static readonly TestRun Current = new TestRun();
     }
 }

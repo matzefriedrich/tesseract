@@ -1,80 +1,77 @@
-﻿#if SYSTEM_DRAWING_SUPPORT
-
-using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-
-namespace Tesseract
+﻿namespace Tesseract
 {
-    /// <summary>
-    /// Converts a <see cref="Bitmap"/> to a <see cref="Pix"/>.
-    /// </summary>
-    public class BitmapToPixConverter
-    {
-        public BitmapToPixConverter()
-        {
-        }
+    using System;
+    using System.Drawing;
+    using System.Drawing.Imaging;
 
+    /// <summary>
+    ///     Converts a <see cref="Bitmap" /> to a <see cref="Pix" />.
+    /// </summary>
+    internal sealed class BitmapToPixConverter : IBitmapToPixConverter
+    {
         /// <summary>
-        /// Converts the specified <paramref name="img"/> to a <see cref="Pix"/>.
+        ///     Converts the specified <paramref name="img" /> to a <see cref="Pix" />.
         /// </summary>
         /// <param name="img">The source image to be converted.</param>
         /// <returns>The converted pix.</returns>
         public Pix Convert(Bitmap img)
         {
-            var pixDepth = GetPixDepth(img.PixelFormat);
-            var pix = Pix.Create(img.Width, img.Height, pixDepth);            
-            pix.XRes = (int) Math.Round(img.HorizontalResolution);
-            pix.YRes = (int) Math.Round(img.VerticalResolution);
+            int pixDepth = this.GetPixDepth(img.PixelFormat);
+            var pix = Pix.Create(img.Width, img.Height, pixDepth);
+            pix.XRes = (int)Math.Round(img.HorizontalResolution);
+            pix.YRes = (int)Math.Round(img.VerticalResolution);
 
             BitmapData imgData = null;
             PixData pixData = null;
-            try {
+            try
+            {
                 // TODO: Set X and Y resolution
 
-                if ((img.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed) {
-                    CopyColormap(img, pix);
-                }
+                if ((img.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed) this.CopyColormap(img, pix);
 
                 // transfer data
                 imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadOnly, img.PixelFormat);
                 pixData = pix.GetData();
 
-                if (imgData.PixelFormat == PixelFormat.Format32bppArgb) {
-                    TransferDataFormat32bppArgb(imgData, pixData);
-                } else if (imgData.PixelFormat == PixelFormat.Format32bppRgb) {
-                    TransferDataFormat32bppRgb(imgData, pixData);
-                } else if (imgData.PixelFormat == PixelFormat.Format24bppRgb) {
-                    TransferDataFormat24bppRgb(imgData, pixData);
-                } else if (imgData.PixelFormat == PixelFormat.Format8bppIndexed) {
-                    TransferDataFormat8bppIndexed(imgData, pixData);
-                } else if (imgData.PixelFormat == PixelFormat.Format1bppIndexed) {
-                    TransferDataFormat1bppIndexed(imgData, pixData);
-                }
+                if (imgData.PixelFormat == PixelFormat.Format32bppArgb)
+                    this.TransferDataFormat32bppArgb(imgData, pixData);
+                else if (imgData.PixelFormat == PixelFormat.Format32bppRgb)
+                    this.TransferDataFormat32bppRgb(imgData, pixData);
+                else if (imgData.PixelFormat == PixelFormat.Format24bppRgb)
+                    this.TransferDataFormat24bppRgb(imgData, pixData);
+                else if (imgData.PixelFormat == PixelFormat.Format8bppIndexed)
+                    this.TransferDataFormat8bppIndexed(imgData, pixData);
+                else if (imgData.PixelFormat == PixelFormat.Format1bppIndexed) this.TransferDataFormat1bppIndexed(imgData, pixData);
                 return pix;
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 pix.Dispose();
                 throw;
-            } finally {
-                if (imgData != null) {
-                    img.UnlockBits(imgData);
-                }
+            }
+            finally
+            {
+                if (imgData != null) img.UnlockBits(imgData);
             }
         }
 
         private void CopyColormap(Bitmap img, Pix pix)
         {
-            var imgPalette = img.Palette;
-            var imgPaletteEntries = imgPalette.Entries;
+            ColorPalette imgPalette = img.Palette;
+            Color[] imgPaletteEntries = imgPalette.Entries;
             var pixColormap = PixColormap.Create(pix.Depth);
-            try {
-                for (int i = 0; i < imgPaletteEntries.Length; i++) {
-                    if (!pixColormap.AddColor(imgPaletteEntries[i].ToPixColor())) {
-                        throw new InvalidOperationException(String.Format("Failed to add colormap entry {0}.", i));
-                    }
+            try
+            {
+                for (var i = 0; i < imgPaletteEntries.Length; i++)
+                {
+                    Color paletteEntry = imgPaletteEntries[i];
+                    if (!pixColormap.AddColor(paletteEntry.ToPixColor())) throw new InvalidOperationException(string.Format("Failed to add colormap entry {0}.", i));
                 }
+
                 pix.Colormap = pixColormap;
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 pixColormap.Dispose();
                 throw;
             }
@@ -82,7 +79,8 @@ namespace Tesseract
 
         private int GetPixDepth(PixelFormat pixelFormat)
         {
-            switch (pixelFormat) {
+            switch (pixelFormat)
+            {
                 case PixelFormat.Format1bppIndexed:
                     return 1;
 
@@ -95,19 +93,21 @@ namespace Tesseract
                     return 32;
 
                 default:
-                    throw new InvalidOperationException(String.Format("Source bitmap's pixel format {0} is not supported.", pixelFormat));
+                    throw new InvalidOperationException(string.Format("Source bitmap's pixel format {0} is not supported.", pixelFormat));
             }
         }
 
         private unsafe void TransferDataFormat1bppIndexed(BitmapData imgData, PixData pixData)
         {
-            var height = imgData.Height;
-            var width = imgData.Width / 8;
-            for (int y = 0; y < height; y++) {
-                byte* imgLine = (byte*)imgData.Scan0 + (y * imgData.Stride);
-                uint* pixLine = (uint*)pixData.Data + (y * pixData.WordsPerLine);
+            int height = imgData.Height;
+            int width = imgData.Width / 8;
+            for (var y = 0; y < height; y++)
+            {
+                byte* imgLine = (byte*)imgData.Scan0 + y * imgData.Stride;
+                uint* pixLine = (uint*)pixData.Data + y * pixData.WordsPerLine;
 
-                for (int x = 0; x < width; x++) {
+                for (var x = 0; x < width; x++)
+                {
                     byte pixelVal = BitmapHelper.GetDataByte(imgLine, x);
                     PixData.SetDataByte(pixLine, x, pixelVal);
                 }
@@ -116,15 +116,17 @@ namespace Tesseract
 
         private unsafe void TransferDataFormat24bppRgb(BitmapData imgData, PixData pixData)
         {
-            var imgFormat = imgData.PixelFormat;
-            var height = imgData.Height;
-            var width = imgData.Width;
+            PixelFormat imgFormat = imgData.PixelFormat;
+            int height = imgData.Height;
+            int width = imgData.Width;
 
-            for (int y = 0; y < height; y++) {
-                byte* imgLine = (byte*)imgData.Scan0 + (y * imgData.Stride);
-                uint* pixLine = (uint*)pixData.Data + (y * pixData.WordsPerLine);
+            for (var y = 0; y < height; y++)
+            {
+                byte* imgLine = (byte*)imgData.Scan0 + y * imgData.Stride;
+                uint* pixLine = (uint*)pixData.Data + y * pixData.WordsPerLine;
 
-                for (int x = 0; x < width; x++) {
+                for (var x = 0; x < width; x++)
+                {
                     byte* pixelPtr = imgLine + x * 3;
                     byte blue = pixelPtr[0];
                     byte green = pixelPtr[1];
@@ -136,15 +138,17 @@ namespace Tesseract
 
         private unsafe void TransferDataFormat32bppRgb(BitmapData imgData, PixData pixData)
         {
-            var imgFormat = imgData.PixelFormat;
-            var height = imgData.Height;
-            var width = imgData.Width;
+            PixelFormat imgFormat = imgData.PixelFormat;
+            int height = imgData.Height;
+            int width = imgData.Width;
 
-            for (int y = 0; y < height; y++) {
-                byte* imgLine = (byte*)imgData.Scan0 + (y * imgData.Stride);
-                uint* pixLine = (uint*)pixData.Data + (y * pixData.WordsPerLine);
+            for (var y = 0; y < height; y++)
+            {
+                byte* imgLine = (byte*)imgData.Scan0 + y * imgData.Stride;
+                uint* pixLine = (uint*)pixData.Data + y * pixData.WordsPerLine;
 
-                for (int x = 0; x < width; x++) {
+                for (var x = 0; x < width; x++)
+                {
                     byte* pixelPtr = imgLine + (x << 2);
                     byte blue = *pixelPtr;
                     byte green = *(pixelPtr + 1);
@@ -156,16 +160,16 @@ namespace Tesseract
 
         private unsafe void TransferDataFormat32bppArgb(BitmapData imgData, PixData pixData)
         {
-            var imgFormat = imgData.PixelFormat;
-            var height = imgData.Height;
-            var width = imgData.Width;
+            PixelFormat imgFormat = imgData.PixelFormat;
+            int height = imgData.Height;
+            int width = imgData.Width;
 
-            for (int y = 0; y < height; y++)
+            for (var y = 0; y < height; y++)
             {
-                byte* imgLine = (byte*)imgData.Scan0 + (y * imgData.Stride);
-                uint* pixLine = (uint*)pixData.Data + (y * pixData.WordsPerLine);
+                byte* imgLine = (byte*)imgData.Scan0 + y * imgData.Stride;
+                uint* pixLine = (uint*)pixData.Data + y * pixData.WordsPerLine;
 
-                for (int x = 0; x < width; x++)
+                for (var x = 0; x < width; x++)
                 {
                     byte* pixelPtr = imgLine + (x << 2);
                     byte blue = *pixelPtr;
@@ -179,14 +183,16 @@ namespace Tesseract
 
         private unsafe void TransferDataFormat8bppIndexed(BitmapData imgData, PixData pixData)
         {
-            var height = imgData.Height;
-            var width = imgData.Width;
+            int height = imgData.Height;
+            int width = imgData.Width;
 
-            for (int y = 0; y < height; y++) {
-                byte* imgLine = (byte*)imgData.Scan0 + (y * imgData.Stride);
-                uint* pixLine = (uint*)pixData.Data + (y * pixData.WordsPerLine);
+            for (var y = 0; y < height; y++)
+            {
+                byte* imgLine = (byte*)imgData.Scan0 + y * imgData.Stride;
+                uint* pixLine = (uint*)pixData.Data + y * pixData.WordsPerLine;
 
-                for (int x = 0; x < width; x++) {
+                for (var x = 0; x < width; x++)
+                {
                     byte pixelVal = *(imgLine + x);
                     PixData.SetDataByte(pixLine, x, pixelVal);
                 }
@@ -194,5 +200,3 @@ namespace Tesseract
         }
     }
 }
-
-#endif

@@ -1,12 +1,7 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Tesseract.Tests.Leptonica
+﻿namespace Tesseract.Tests.Leptonica
 {
+    using NUnit.Framework;
+
     [TestFixture]
     public class BitmapHelperTests
     {
@@ -14,7 +9,7 @@ namespace Tesseract.Tests.Leptonica
         public void ConvertRgb555ToPixColor()
         {
             ushort originalVal = 0x39EC;
-            var convertedValue = BitmapHelper.ConvertRgb555ToRGBA(originalVal);
+            uint convertedValue = BitmapHelper.ConvertRgb555ToRGBA(originalVal);
             Assert.That(convertedValue, Is.EqualTo(0x737B63FF));
         }
 
@@ -23,7 +18,7 @@ namespace Tesseract.Tests.Leptonica
         [TestCase(0x39EC, 0x737B6300)]
         public void ConvertArgb555ToPixColor(int originalVal, int expectedVal)
         {
-            var convertedValue = BitmapHelper.ConvertArgb1555ToRGBA((ushort)originalVal);
+            uint convertedValue = BitmapHelper.ConvertArgb1555ToRGBA((ushort)originalVal);
             Assert.That(convertedValue, Is.EqualTo((uint)expectedVal));
         }
 
@@ -31,7 +26,7 @@ namespace Tesseract.Tests.Leptonica
         public void ConvertRgb565ToPixColor()
         {
             ushort originalVal = 0x73CC;
-            var convertedValue = BitmapHelper.ConvertRgb565ToRGBA(originalVal);
+            uint convertedValue = BitmapHelper.ConvertRgb565ToRGBA(originalVal);
             Assert.That(convertedValue, Is.EqualTo(0x737963FF));
         }
     }

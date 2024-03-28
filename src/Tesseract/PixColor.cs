@@ -1,108 +1,104 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-
-namespace Tesseract
+﻿namespace Tesseract
 {
-    [StructLayout(LayoutKind.Sequential, Pack=1)]
-	public struct PixColor : IEquatable<PixColor>
-    {
-        private byte red;
-        private byte blue;
-        private byte green;
-        private byte alpha;
+    using System;
+    using System.Drawing;
+    using System.Runtime.InteropServices;
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct PixColor : IEquatable<PixColor>
+    {
         public PixColor(byte red, byte green, byte blue, byte alpha = 255)
         {
-            this.red = red;
-            this.green = green;
-            this.blue = blue;
-            this.alpha = alpha;
+            this.Red = red;
+            this.Green = green;
+            this.Blue = blue;
+            this.Alpha = alpha;
         }
 
-        public byte Red { get { return red; } }
-        public byte Green { get { return green; } }
-        public byte Blue { get { return blue; } }
-        public byte Alpha { get { return alpha; } }
+        public byte Red { get; }
+
+        public byte Green { get; }
+
+        public byte Blue { get; }
+
+        public byte Alpha { get; }
 
         public static PixColor FromRgba(uint value)
         {
             return new PixColor(
-               (byte)((value >> 24) & 0xFF),
-               (byte)((value >> 16) & 0xFF),
-               (byte)((value >> 8) & 0xFF),
-               (byte)(value & 0xFF));
+                (byte)((value >> 24) & 0xFF),
+                (byte)((value >> 16) & 0xFF),
+                (byte)((value >> 8) & 0xFF),
+                (byte)(value & 0xFF));
         }
 
         public static PixColor FromRgb(uint value)
         {
             return new PixColor(
-               (byte)((value >> 24) & 0xFF),
-               (byte)((value >> 16) & 0xFF),
-               (byte)((value >> 8) & 0xFF),
-               (byte)0xFF);
+                (byte)((value >> 24) & 0xFF),
+                (byte)((value >> 16) & 0xFF),
+                (byte)((value >> 8) & 0xFF));
         }
 
         public uint ToRGBA()
         {
-            return (uint)((red << 24) |
-               (green << 16) |
-               (blue << 8) |
-               alpha);
+            return (uint)((this.Red << 24) |
+                          (this.Green << 16) |
+                          (this.Blue << 8) | this.Alpha);
         }
 
-#if NETFULL
-        public static explicit operator System.Drawing.Color(PixColor color)
+        public static explicit operator Color(PixColor color)
         {
-            return System.Drawing.Color.FromArgb(color.alpha, color.red, color.green, color.blue);
+            return Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
         }
 
-        public static explicit operator PixColor(System.Drawing.Color color)
+        public static explicit operator PixColor(Color color)
         {
             return new PixColor(color.R, color.G, color.B, color.A);
         }
-#endif
 
 
-#region Equals and GetHashCode implementation
+        #region Equals and GetHashCode implementation
+
         public override bool Equals(object obj)
-		{
-			return (obj is PixColor) && Equals((PixColor)obj);
-		}
-        
-		public bool Equals(PixColor other)
-		{
-			return this.red == other.red && this.blue == other.blue && this.green == other.green && this.alpha == other.alpha;
-		}
-        
-		public override int GetHashCode()
-		{
-			int hashCode = 0;
-			unchecked {
-				hashCode += 1000000007 * red.GetHashCode();
-				hashCode += 1000000009 * blue.GetHashCode();
-				hashCode += 1000000021 * green.GetHashCode();
-				hashCode += 1000000033 * alpha.GetHashCode();
-			}
-			return hashCode;
-		}
-        
-		public static bool operator ==(PixColor lhs, PixColor rhs)
-		{
-			return lhs.Equals(rhs);
-		}
-        
-		public static bool operator !=(PixColor lhs, PixColor rhs)
-		{
-			return !(lhs == rhs);
-		}
-#endregion
+        {
+            return obj is PixColor && this.Equals((PixColor)obj);
+        }
+
+        public bool Equals(PixColor other)
+        {
+            return this.Red == other.Red && this.Blue == other.Blue && this.Green == other.Green && this.Alpha == other.Alpha;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 0;
+            unchecked
+            {
+                hashCode += 1000000007 * this.Red.GetHashCode();
+                hashCode += 1000000009 * this.Blue.GetHashCode();
+                hashCode += 1000000021 * this.Green.GetHashCode();
+                hashCode += 1000000033 * this.Alpha.GetHashCode();
+            }
+
+            return hashCode;
+        }
+
+        public static bool operator ==(PixColor lhs, PixColor rhs)
+        {
+            return lhs.Equals(rhs);
+        }
+
+        public static bool operator !=(PixColor lhs, PixColor rhs)
+        {
+            return !(lhs == rhs);
+        }
+
+        #endregion
 
         public override string ToString()
         {
-            return String.Format("Color(0x{0:X})", ToRGBA());
+            return string.Format("Color(0x{0:X})", this.ToRGBA());
         }
-
     }
 }
