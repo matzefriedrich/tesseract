@@ -2251,8 +2251,9 @@
             <summary>
                 Gets or sets default
                 <see cref="T:Tesseract.PageSegMode"/>
-                mode used by<see
-                    cref="M:Tesseract.TesseractEngine.Process(Tesseract.Pix,Tesseract.Rect,System.Nullable{Tesseract.PageSegMode})"/>
+                mode used by
+                <see
+                        cref="M:Tesseract.TesseractEngine.Process(Tesseract.Pix,Tesseract.Rect,System.Nullable{Tesseract.PageSegMode})"/>
                 .
             </summary>
         </member>

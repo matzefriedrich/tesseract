@@ -1,33 +1,38 @@
 This project is a fork of the https://github.com/charlesw/tesseract repository.
 
 **The solution has been migrated to .NET 8.0**, and ...
- * conditional compilation symbols have been removed.
- * The code has been cleaned and reformated to automatically adopt the latest syntax sugar. Thus, the project is no longer compatible with its upstream source. If you must rely on an already-known upgrade path, stick to the original project instead.
- * support for Tesseract.Drawing has been removed (might get restored).
+
+* conditional compilation symbols have been removed.
+* The code has been cleaned and reformated to automatically adopt the latest syntax sugar. Thus, the project is no
+  longer compatible with its upstream source. If you must rely on an already-known upgrade path, stick to the original
+  project instead.
+* support for Tesseract.Drawing has been removed (might get restored).
 
 **The aim of this fork** is..
- * having a project that works with the latest .NET Framework version (because .NET 4.8 and .NET Core 3.1 are dowdy).
- * the dynamic runtime approach (based on DotNetInterop) is excellent, but it is overhead and adds complexity I´d like to eliminate.
- * to align the wrapper API with SOTA concepts as found in modern .NET applications
-   * no hidden dependencies; consistent usage of DI, and no more singletons
-   * adoption of the module system introduced by .NET Core (improved separation of concerns, reliable abstractions, interfaces, and primitive types)
+
+* having a project that works with the latest .NET Framework version (because .NET 4.8 and .NET Core 3.1 are dowdy).
+* the dynamic runtime approach (based on DotNetInterop) is excellent, but it is overhead and adds complexity I´d like to
+  eliminate.
+* to align the wrapper API with SOTA concepts as found in modern .NET applications
+    * no hidden dependencies; consistent usage of DI, and no more singletons
+    * adoption of the module system introduced by .NET Core (improved separation of concerns, reliable abstractions,
+      interfaces, and primitive types)
 
 ## Prerequisites
 
- * Visual Studio 2022, or Jetbrains Rider 2023+
- * Visual Studio 2019 C++ runtime; see https://visualstudio.microsoft.com/downloads/
- * Tesseract language files; see https://github.com/tesseract-ocr/tessdata/
+* Visual Studio 2022, or Jetbrains Rider 2023+
+* Visual Studio 2019 C++ runtime; see https://visualstudio.microsoft.com/downloads/
+* Tesseract language files; see https://github.com/tesseract-ocr/tessdata/
 
 ## Build
 
-Run the following command from the Visual Studio command prompt to restore referenced Nuget packages and build the projects: 
+Run the following command from the Visual Studio command prompt to restore referenced Nuget packages and build the
+projects:
 
 ````bash
 $ cd src
 $ msbuild ./Tesseract.sln /p:Configuration=Release
 ````
-
-
 
 ## License
 
@@ -49,7 +54,6 @@ specific language governing permissions and limitations under the License.
 Copyright 2014 Andrey Akinshin
 Project URL: https://github.com/AndreyAkinshin/InteropDotNet
 Distributed under the MIT License: http://opensource.org/licenses/MIT
-
 
 ### Contributors
 

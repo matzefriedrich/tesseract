@@ -56,7 +56,7 @@
                             {
                                 ElementProperties result = pageLayout.GetProperties();
 
-                                float rotation = (angle ?? 0);
+                                float rotation = angle ?? 0;
                                 this.ExpectedOrientation(rotation, out Orientation orient, out float _);
                                 Assert.That(result.Orientation, Is.EqualTo(orient));
 
@@ -163,7 +163,7 @@
             using Pix rotatedPix = img.Rotate((float)expectedOrientationDegrees / 360 * (float)Math.PI * 2);
             using Page page = this.engine.Process(rotatedPix, PageSegMode.OsdOnly);
             page.DetectBestOrientation(out int orientation, out float _);
-            
+
             Assert.That(orientation, Is.EqualTo(expectedOrientationDegrees));
         }
 

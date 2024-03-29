@@ -51,10 +51,7 @@
         public static string? BaseApiGetVersion()
         {
             IntPtr? versionHandle = Native?.GetVersion();
-            if (versionHandle != null && versionHandle.Value != IntPtr.Zero)
-            {
-                return MarshalHelper.PtrToString(versionHandle, Encoding.UTF8);
-            }
+            if (versionHandle != null && versionHandle.Value != IntPtr.Zero) return MarshalHelper.PtrToString(versionHandle, Encoding.UTF8);
 
             return null;
         }
@@ -212,7 +209,7 @@
             var varsVecSize = new UIntPtr((uint)varNames.Length);
             return Native?.BaseApiInit(handle, datapath, language, mode,
                 configFilesArray, configFilesArray.Length,
-                varNames, varValues, 
+                varNames, varValues,
                 varsVecSize, setOnlyNonDebugParams);
         }
 

@@ -47,7 +47,7 @@ namespace InteropDotNet
                 MethodInfo methodInfo = methodInfoArray[i];
                 RuntimeDllImportAttribute? attribute = GetRuntimeDllImportAttribute(methodInfo);
                 if (attribute == null) throw new Exception($"Method '{methodInfo.Name}' of interface '{interfaceType.Name}' should be marked with the RuntimeDllImport attribute");
-                methods[i] = new MethodItem(methodInfo, attribute, null, null) ;
+                methods[i] = new MethodItem(methodInfo, attribute);
             }
 
             return methods;
@@ -295,8 +295,8 @@ namespace InteropDotNet
             public MethodItem(MethodInfo info, RuntimeDllImportAttribute dllImportAttribute, Type? delegateType = null, FieldInfo? fieldInfo = null)
             {
                 this.Info = info ?? throw new ArgumentNullException(nameof(info));
-                this.DllImportAttribute = dllImportAttribute ?? throw new ArgumentNullException(nameof(dllImportAttribute)) ;
-                this.DelegateType = delegateType ;
+                this.DllImportAttribute = dllImportAttribute ?? throw new ArgumentNullException(nameof(dllImportAttribute));
+                this.DelegateType = delegateType;
                 this.FieldInfo = fieldInfo;
             }
 

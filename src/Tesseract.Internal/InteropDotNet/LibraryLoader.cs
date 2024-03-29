@@ -10,6 +10,7 @@ namespace InteropDotNet
 
     public sealed class LibraryLoader
     {
+        private static LibraryLoader? instance;
         private readonly Dictionary<string, IntPtr> loadedAssemblies = new();
         private readonly ILibraryLoaderLogic logic;
 
@@ -21,6 +22,36 @@ namespace InteropDotNet
         }
 
         public string? CustomSearchPath { get; set; }
+
+        public static LibraryLoader? Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    OperatingSystem operatingSystem = SystemManager.GetOperatingSystem();
+                    switch (operatingSystem)
+                    {
+                        case OperatingSystem.Windows:
+                            Logger.TraceInformation("Current OS: Windows");
+                            instance = new LibraryLoader(new WindowsLibraryLoaderLogic());
+                            break;
+                        case OperatingSystem.Unix:
+                            Logger.TraceInformation("Current OS: Unix");
+                            instance = new LibraryLoader(new UnixLibraryLoaderLogic());
+                            break;
+                        case OperatingSystem.MacOSX:
+                            Logger.TraceInformation("Current OS: MacOsX");
+                            instance = new LibraryLoader(new UnixLibraryLoaderLogic());
+                            break;
+                        default:
+                            throw new Exception("Unsupported operation system");
+                    }
+                }
+
+                return instance;
+            }
+        }
 
         public IntPtr LoadLibrary(string fileName, string? platformName = null)
         {
@@ -173,39 +204,6 @@ namespace InteropDotNet
         private string FixUpLibraryName(string fileName)
         {
             return this.logic.FixUpLibraryName(fileName);
-        }
-
-
-        private static LibraryLoader? instance;
-
-        public static LibraryLoader? Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    OperatingSystem operatingSystem = SystemManager.GetOperatingSystem();
-                    switch (operatingSystem)
-                    {
-                        case OperatingSystem.Windows:
-                            Logger.TraceInformation("Current OS: Windows");
-                            instance = new LibraryLoader(new WindowsLibraryLoaderLogic());
-                            break;
-                        case OperatingSystem.Unix:
-                            Logger.TraceInformation("Current OS: Unix");
-                            instance = new LibraryLoader(new UnixLibraryLoaderLogic());
-                            break;
-                        case OperatingSystem.MacOSX:
-                            Logger.TraceInformation("Current OS: MacOsX");
-                            instance = new LibraryLoader(new UnixLibraryLoaderLogic());
-                            break;
-                        default:
-                            throw new Exception("Unsupported operation system");
-                    }
-                }
-
-                return instance;
-            }
         }
     }
 }
