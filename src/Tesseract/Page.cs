@@ -7,6 +7,9 @@
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Text;
+
+    using Abstractions;
+
     using Interop;
     using Interop.Abstractions;
 
@@ -233,8 +236,7 @@
                 IntPtr box = LeptonicaApi.Native.boxaGetBox(new HandleRef(this, boxArray), i, PixArrayAccessType.Clone);
                 if (box == IntPtr.Zero) continue;
 
-                int px, py, pw, ph;
-                LeptonicaApi.Native.boxGetGeometry(new HandleRef(this, box), out px, out py, out pw, out ph);
+                LeptonicaApi.Native.boxGetGeometry(new HandleRef(this, box), out int px, out int py, out int pw, out int ph);
                 boxList.Add(new Rectangle(px, py, pw, ph));
                 LeptonicaApi.Native.boxDestroy(ref box);
             }
@@ -287,11 +289,8 @@
         /// <param name="confidence">The confidence level of the orientation (15 is reasonably confident).</param>
         public void DetectBestOrientation(out int orientation, out float confidence)
         {
-            string scriptName;
-            float scriptConfidence;
-            this.DetectBestOrientationAndScript(out orientation, out confidence, out scriptName, out scriptConfidence);
+            this.DetectBestOrientationAndScript(out orientation, out confidence, out string _, out float _);
         }
-
 
         /// <summary>
         ///     Detects the page orientation, with corresponding confidence when using <see cref="PageSegMode.OsdOnly" />.
@@ -343,20 +342,20 @@
                 // now write out the thresholded image if required to do so
                 bool tesseditWriteImages;
                 if (this.Engine.TryGetBoolVariable("tessedit_write_images", out tesseditWriteImages) && tesseditWriteImages)
-                    using (Pix thresholdedImage = this.GetThresholdedImage())
+                {
+                    using Pix thresholdedImage = this.GetThresholdedImage();
+                    string filePath = Path.Combine(Environment.CurrentDirectory, "tessinput.tif");
+                    try
                     {
-                        string filePath = Path.Combine(Environment.CurrentDirectory, "tessinput.tif");
-                        try
-                        {
-                            const ImageFormat imageFormat = ImageFormat.TiffG4;
-                            thresholdedImage.Save(filePath, imageFormat);
-                            trace.TraceEvent(TraceEventType.Information, 2, "Successfully saved the thresholded image to '{0}'", filePath);
-                        }
-                        catch (Exception error)
-                        {
-                            trace.TraceEvent(TraceEventType.Error, 2, "Failed to save the thresholded image to '{0}'.\nError: {1}", filePath, error.Message);
-                        }
+                        const ImageFormat imageFormat = ImageFormat.TiffG4;
+                        thresholdedImage.Save(filePath, imageFormat);
+                        trace.TraceEvent(TraceEventType.Information, 2, "Successfully saved the thresholded image to '{0}'", filePath);
                     }
+                    catch (Exception error)
+                    {
+                        trace.TraceEvent(TraceEventType.Error, 2, "Failed to save the thresholded image to '{0}'.\nError: {1}", filePath, error.Message);
+                    }
+                }
             }
         }
 

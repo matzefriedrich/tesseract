@@ -1,4 +1,4 @@
-﻿namespace Tesseract.Interop
+﻿namespace Tesseract.Abstractions
 {
 	/// <summary>
 	///     Represents orientation that the page would need to be rotated so that .

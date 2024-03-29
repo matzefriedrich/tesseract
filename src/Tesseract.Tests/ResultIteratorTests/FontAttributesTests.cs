@@ -1,6 +1,9 @@
 namespace Tesseract.Tests.ResultIteratorTests
 {
+    using Abstractions;
+
     using Interop;
+
     using NUnit.Framework;
 
     [TestFixture]

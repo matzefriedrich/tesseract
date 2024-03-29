@@ -4,6 +4,8 @@
     using System.Drawing;
     using System.Drawing.Imaging;
 
+    using Abstractions;
+
     public static class TesseractDrawingExtensions
     {
         /// <summary>

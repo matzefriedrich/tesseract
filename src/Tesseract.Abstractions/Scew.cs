@@ -1,6 +1,6 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
-    public struct Scew
+    public struct Scew : IEquatable<Scew>
     {
         public Scew(float angle, float confidence)
         {
@@ -10,23 +10,16 @@
 
         public float Angle { get; }
 
-
         public float Confidence { get; }
-
-        #region ToString
 
         public override string ToString()
         {
-            return string.Format("Scew: {0} [conf: {1}]", this.Angle, this.Confidence);
+            return $"Scew: {this.Angle} [conf: {this.Confidence}]";
         }
 
-        #endregion
-
-        #region Equals and GetHashCode implementation
-
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return obj is Scew && this.Equals((Scew)obj);
+            return obj is Scew scew && this.Equals(scew);
         }
 
         public bool Equals(Scew other)
@@ -36,14 +29,7 @@
 
         public override int GetHashCode()
         {
-            var hashCode = 0;
-            unchecked
-            {
-                hashCode += 1000000007 * this.Angle.GetHashCode();
-                hashCode += 1000000009 * this.Confidence.GetHashCode();
-            }
-
-            return hashCode;
+            return HashCode.Combine(this.Angle, this.Confidence);
         }
 
         public static bool operator ==(Scew lhs, Scew rhs)
@@ -55,7 +41,5 @@
         {
             return !(lhs == rhs);
         }
-
-        #endregion
     }
 }

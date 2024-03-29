@@ -1,6 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
     using Interop;
+
     using NUnit.Framework;
 
     [TestFixture]

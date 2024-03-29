@@ -1,9 +1,10 @@
 ﻿namespace Tesseract.Tests.Leptonica
 {
-    using System;
     using System.Drawing;
     using System.Drawing.Imaging;
+
     using NUnit.Framework;
+
     using ImageFormat = Interop.Abstractions.ImageFormat;
 
     public class ConvertBitmapToPixTests : TesseractTestBase
@@ -14,19 +15,13 @@
         {
             string sourceFilePath = TestFilePath("Conversion/photo_rgb_32bpp.tif");
             var bitmapConverter = new BitmapToPixConverter();
-            using (var source = new Bitmap(sourceFilePath))
-            {
-                using (var scaledSource = new Bitmap(source, new Size(source.Width * 2, source.Height * 2)))
-                {
-                    Assert.That(scaledSource.GetBPP(), Is.EqualTo(32));
-                    using (Pix dest = bitmapConverter.Convert(scaledSource))
-                    {
-                        dest.Save(TestResultRunFile("Conversion/ScaledBitmapToPix_rgb_32bpp.tif"), ImageFormat.Tiff);
+            using var source = new Bitmap(sourceFilePath);
+            using var scaledSource = new Bitmap(source, new Size(source.Width * 2, source.Height * 2));
+            Assert.That(scaledSource.GetBPP(), Is.EqualTo(32));
+            using Pix dest = bitmapConverter.Convert(scaledSource);
+            dest.Save(TestResultRunFile("Conversion/ScaledBitmapToPix_rgb_32bpp.tif"), ImageFormat.Tiff);
 
-                        this.AssertAreEquivalent(scaledSource, dest, true);
-                    }
-                }
-            }
+            this.AssertAreEquivalent(scaledSource, dest, true);
         }
 
         [Test]
@@ -43,21 +38,17 @@
             else if (depth == 16) pixType = "grayscale";
             else pixType = Image.IsAlphaPixelFormat(pixelFormat) ? "argb" : "rgb";
 
-            string sourceFile = string.Format("Conversion/photo_{0}_{1}bpp.tif", pixType, depth);
+            var sourceFile = $"Conversion/photo_{pixType}_{depth}bpp.tif";
             string sourceFilePath = TestFilePath(sourceFile);
             var bitmapConverter = new BitmapToPixConverter();
-            using (var source = new Bitmap(sourceFilePath))
-            {
-                Assert.That(source.PixelFormat, Is.EqualTo(pixelFormat));
-                Assert.That(source.GetBPP(), Is.EqualTo(depth));
-                using (Pix dest = bitmapConverter.Convert(source))
-                {
-                    string destFilename = string.Format("Conversion/BitmapToPix_{0}_{1}bpp.tif", pixType, depth);
-                    dest.Save(TestResultRunFile(destFilename), ImageFormat.Tiff);
+            using var source = new Bitmap(sourceFilePath);
+            Assert.That(source.PixelFormat, Is.EqualTo(pixelFormat));
+            Assert.That(source.GetBPP(), Is.EqualTo(depth));
+            using Pix dest = bitmapConverter.Convert(source);
+            var destFilename = $"Conversion/BitmapToPix_{pixType}_{depth}bpp.tif";
+            dest.Save(TestResultRunFile(destFilename), ImageFormat.Tiff);
 
-                    this.AssertAreEquivalent(source, dest, true);
-                }
-            }
+            this.AssertAreEquivalent(source, dest, true);
         }
 
         /// <summary>
@@ -68,18 +59,14 @@
         {
             string sourceFile = TestFilePath("Conversion/photo_palette_8bpp.png");
             var bitmapConverter = new BitmapToPixConverter();
-            using (var source = new Bitmap(sourceFile))
-            {
-                Assert.That(source.GetBPP(), Is.EqualTo(8));
-                Assert.That(source.PixelFormat, Is.EqualTo(PixelFormat.Format8bppIndexed));
-                using (Pix dest = bitmapConverter.Convert(source))
-                {
-                    string destFilename = TestResultRunFile("Conversion/BitmapToPix_palette_8bpp.png");
-                    dest.Save(destFilename, ImageFormat.Png);
+            using var source = new Bitmap(sourceFile);
+            Assert.That(source.GetBPP(), Is.EqualTo(8));
+            Assert.That(source.PixelFormat, Is.EqualTo(PixelFormat.Format8bppIndexed));
+            using Pix dest = bitmapConverter.Convert(source);
+            string destFilename = TestResultRunFile("Conversion/BitmapToPix_palette_8bpp.png");
+            dest.Save(destFilename, ImageFormat.Png);
 
-                    this.AssertAreEquivalent(source, dest, true);
-                }
-            }
+            this.AssertAreEquivalent(source, dest, true);
         }
 
         [Test]
@@ -99,23 +86,19 @@
             else if (hasPalette) pixType = "palette";
             else pixType = "rgb";
 
-            string sourceFile = TestFilePath(string.Format("Conversion/photo_{0}_{1}bpp.tif", pixType, depth));
+            string sourceFile = TestFilePath($"Conversion/photo_{pixType}_{depth}bpp.tif");
             var converter = new PixToBitmapConverter();
-            using (Pix source = Pix.LoadFromFile(sourceFile))
-            {
-                Assert.That(source.Depth, Is.EqualTo(depth));
-                if (hasPalette)
-                    Assert.That(source.Colormap, Is.Not.Null, "Expected source image to have color map\\palette.");
-                else
-                    Assert.That(source.Colormap, Is.Null, "Expected source image to be grayscale.");
-                using (Bitmap dest = converter.Convert(source, includeAlpha))
-                {
-                    string destFilename = TestResultRunFile(string.Format("Conversion/PixToBitmap_{0}_{1}bpp.tif", pixType, depth));
-                    dest.Save(destFilename, System.Drawing.Imaging.ImageFormat.Tiff);
+            using Pix source = Pix.LoadFromFile(sourceFile);
+            Assert.That(source.Depth, Is.EqualTo(depth));
+            if (hasPalette)
+                Assert.That(source.Colormap, Is.Not.Null, "Expected source image to have color map\\palette.");
+            else
+                Assert.That(source.Colormap, Is.Null, "Expected source image to be grayscale.");
+            using Bitmap dest = converter.Convert(source, includeAlpha);
+            string destFilename = TestResultRunFile($"Conversion/PixToBitmap_{pixType}_{depth}bpp.tif");
+            dest.Save(destFilename, System.Drawing.Imaging.ImageFormat.Tiff);
 
-                    this.AssertAreEquivalent(dest, source, includeAlpha);
-                }
-            }
+            this.AssertAreEquivalent(dest, source, includeAlpha);
         }
 
         private void AssertAreEquivalent(Bitmap bmp, Pix pix, bool checkAlpha)
@@ -156,7 +139,7 @@
             else if (pixDepth == 32)
                 pixValue = PixData.GetDataFourByte(pixLine, x);
             else
-                throw new ArgumentException(string.Format("Bit depth of {0} is not supported.", pix.Depth), "pix");
+                throw new ArgumentException($"Bit depth of {pix.Depth} is not supported.", nameof(pix));
 
             if (pix.Colormap != null) return pix.Colormap[(int)pixValue];
 

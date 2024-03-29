@@ -1,4 +1,4 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
 	/// <summary>
 	///     The text lines are read in the given sequence.

@@ -2,6 +2,9 @@
 {
     using System;
     using System.Runtime.InteropServices;
+
+    using Abstractions;
+
     using Interop;
 
     /// <summary>
@@ -27,7 +30,7 @@
         {
             get
             {
-                this.VerifyNotDisposed();
+                this.ThrowIfDisposed();
 
                 if (this.handle.Handle == IntPtr.Zero)
                     return PolyBlockType.Unknown;
@@ -40,7 +43,7 @@
         /// </summary>
         public void Begin()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle != IntPtr.Zero) TessApi.Native.PageIteratorBegin(this.handle);
         }
 
@@ -53,7 +56,7 @@
         /// <returns></returns>
         public bool Next(PageIteratorLevel level)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero)
                 return false;
             return TessApi.Native.PageIteratorNext(this.handle, level) != 0;
@@ -71,7 +74,7 @@
         /// </returns>
         public bool Next(PageIteratorLevel level, PageIteratorLevel element)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
 
             bool isAtFinalElement = this.IsAtFinalOf(level, element);
             if (!isAtFinalElement)
@@ -89,7 +92,7 @@
         /// <returns></returns>
         public bool IsAtBeginningOf(PageIteratorLevel level)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
 
             if (this.handle.Handle == IntPtr.Zero)
                 return false;
@@ -104,7 +107,7 @@
         /// <returns></returns>
         public bool IsAtFinalOf(PageIteratorLevel level, PageIteratorLevel element)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
 
             if (this.handle.Handle == IntPtr.Zero)
                 return false;
@@ -113,7 +116,7 @@
 
         public Pix GetBinaryImage(PageIteratorLevel level)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return null;
 
             return Pix.Create(TessApi.Native.PageIteratorGetBinaryImage(this.handle, level));
@@ -121,7 +124,7 @@
 
         public Pix GetImage(PageIteratorLevel level, int padding, out int x, out int y)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero)
             {
                 x = 0;
@@ -130,7 +133,8 @@
                 return null;
             }
 
-            return Pix.Create(TessApi.Native.PageIteratorGetImage(this.handle, level, padding, this.page.Image.Handle, out x, out y));
+            IntPtr image = TessApi.Native.PageIteratorGetImage(this.handle, level, padding, this.page.Image.Handle, out x, out y);
+            return Pix.Create(image);
         }
 
         /// <summary>
@@ -141,9 +145,8 @@
         /// <returns></returns>
         public bool TryGetBoundingBox(PageIteratorLevel level, out Rect bounds)
         {
-            this.VerifyNotDisposed();
-            int x1, y1, x2, y2;
-            if (this.handle.Handle != IntPtr.Zero && TessApi.Native.PageIteratorBoundingBox(this.handle, level, out x1, out y1, out x2, out y2) != 0)
+            this.ThrowIfDisposed();
+            if (this.handle.Handle != IntPtr.Zero && TessApi.Native.PageIteratorBoundingBox(this.handle, level, out int x1, out int y1, out int x2, out int y2) != 0)
             {
                 bounds = Rect.FromCoords(x1, y1, x2, y2);
                 return true;
@@ -166,9 +169,8 @@
         /// <returns></returns>
         public bool TryGetBaseline(PageIteratorLevel level, out Rect bounds)
         {
-            this.VerifyNotDisposed();
-            int x1, y1, x2, y2;
-            if (this.handle.Handle != IntPtr.Zero && TessApi.Native.PageIteratorBaseline(this.handle, level, out x1, out y1, out x2, out y2) != 0)
+            this.ThrowIfDisposed();
+            if (this.handle.Handle != IntPtr.Zero && TessApi.Native.PageIteratorBaseline(this.handle, level, out int x1, out int y1, out int x2, out int y2) != 0)
             {
                 bounds = Rect.FromCoords(x1, y1, x2, y2);
                 return true;
@@ -183,18 +185,15 @@
         /// </summary>
         public ElementProperties GetProperties()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return new ElementProperties(Orientation.PageUp, TextLineOrder.TopToBottom, WritingDirection.LeftToRight, 0f);
 
-            Orientation orientation;
             WritingDirection writing_direction;
-            TextLineOrder textLineOrder;
             float deskew_angle;
-            TessApi.Native.PageIteratorOrientation(this.handle, out orientation, out writing_direction, out textLineOrder, out deskew_angle);
+            TessApi.Native.PageIteratorOrientation(this.handle, out Orientation orientation, out writing_direction, out TextLineOrder textLineOrder, out deskew_angle);
 
             return new ElementProperties(orientation, textLineOrder, writing_direction, deskew_angle);
         }
-
 
         protected override void Dispose(bool disposing)
         {

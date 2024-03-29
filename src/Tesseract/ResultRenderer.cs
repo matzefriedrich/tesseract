@@ -3,6 +3,9 @@
     using System;
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
+
+    using Abstractions;
+
     using Interop;
 
     /// <summary>
@@ -34,7 +37,7 @@
         public bool AddPage(Page page)
         {
             ArgumentNullException.ThrowIfNull(page);
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
 
             // TODO: Force page to do a recognise run to ensure the underlying base api is full of state note if
             // your implementing your own renderer you won't need to do this since all the page operations will do it
@@ -53,7 +56,7 @@
         {
             if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(title));
 
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this._currentDocumentHandle != null) throw new InvalidOperationException($"Cannot begin document \"{title}\" as another document is currently being processed which must be dispose off first.");
 
             IntPtr titlePtr = Marshal.StringToHGlobalAnsi(title);
@@ -62,7 +65,7 @@
                 // release the pointer first before throwing an error.
                 Marshal.FreeHGlobal(titlePtr);
 
-                throw new InvalidOperationException(string.Format("Failed to begin document \"{0}\".", title));
+                throw new InvalidOperationException($"Failed to begin document \"{title}\".");
             }
 
             this._currentDocumentHandle = new EndDocumentOnDispose(this, titlePtr);
@@ -73,7 +76,7 @@
         {
             get
             {
-                this.VerifyNotDisposed();
+                this.ThrowIfDisposed();
 
                 return TessApi.Native.ResultRendererImageNum(this.Handle);
             }

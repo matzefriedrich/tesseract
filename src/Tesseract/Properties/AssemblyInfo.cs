@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-
 // Assembly specific attributes are now autogrenerated from project settings
 
 // This sets the default COM visibility of types in the assembly to invisible.

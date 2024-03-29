@@ -2,6 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
+
+    using Abstractions;
+
     using Internal;
 
     /// <summary>
@@ -50,12 +53,14 @@
         public bool AddPage(Page page)
         {
             if (page == null) throw new ArgumentNullException(nameof(page));
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
 
             this.PageNumber++;
             foreach (IResultRenderer renderer in this.ResultRenderers)
+            {
                 if (!renderer.AddPage(page))
                     return false;
+            }
 
             return true;
         }
@@ -69,7 +74,7 @@
         {
             if (title == null) throw new ArgumentException("Value cannot be null or whitespace.", nameof(title));
 
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this._currentDocumentHandle != null) throw new InvalidOperationException($"Cannot begin document \"{title}\" as another document is currently being processed which must be dispose off first.");
 
             // Reset the page numer
@@ -88,6 +93,7 @@
             {
                 // Dispose of all previously created child document's iff an error occured to prevent a memory leak.
                 foreach (IDisposable child in children)
+                {
                     try
                     {
                         child.Dispose();
@@ -96,6 +102,7 @@
                     {
                         Logger.TraceError("Failed to dispose of child document {0}: {1}", child, disposalError.Message);
                     }
+                }
 
                 throw;
             }

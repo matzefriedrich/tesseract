@@ -3,6 +3,7 @@
     using System;
     using System.Drawing;
     using System.Drawing.Imaging;
+
     using Abstractions;
 
     internal sealed class PixToBitmapConverter : IPixToBitmapConverter
@@ -155,7 +156,6 @@
             img.Palette = pallete;
         }
 
-
         private PixelFormat GetPixelFormat(Pix pix)
         {
             switch (pix.Depth)
@@ -166,7 +166,7 @@
                 case 8: return PixelFormat.Format8bppIndexed;
                 case 16: return PixelFormat.Format16bppGrayScale;
                 case 32: return PixelFormat.Format32bppArgb;
-                default: throw new InvalidOperationException(string.Format("Pix depth {0} is not supported.", pix.Depth));
+                default: throw new InvalidOperationException($"Pix depth {pix.Depth} is not supported.");
             }
         }
     }

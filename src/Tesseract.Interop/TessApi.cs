@@ -2,8 +2,11 @@
 {
     using System.Runtime.InteropServices;
     using System.Text;
+
     using Abstractions;
+
     using Internal;
+
     using InteropDotNet;
 
     internal static class TessApi

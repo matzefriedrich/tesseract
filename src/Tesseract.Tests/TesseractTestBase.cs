@@ -1,6 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
-    using System.IO;
+    using Abstractions;
+
     using NUnit.Framework;
 
     public abstract class TesseractTestBase
@@ -42,9 +43,7 @@
 
         protected static string TestResultRunDirectory(string path)
         {
-            string runPath = AbsolutePath(
-                string.Format("Runs/{0:yyyyMMddTHHmmss}", TestRun.Current.StartedAt)
-            );
+            string runPath = AbsolutePath($"Runs/{TestRun.Current.StartedAt:yyyyMMddTHHmmss}");
             string testResultRunDirectory = Path.Combine(runPath, path);
             Directory.CreateDirectory(testResultRunDirectory);
 

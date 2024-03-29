@@ -1,6 +1,7 @@
 ﻿namespace Tesseract.Interop
 {
     using Abstractions;
+
     using InteropDotNet;
 
     internal static class LeptonicaApi

@@ -1,7 +1,5 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
-    using System;
-
     [Serializable]
     public class LeptonicaException : Exception
     {

@@ -11,7 +11,6 @@ namespace Tesseract.Internal
     {
         private static readonly TraceSource trace = new("Tesseract");
 
-
         public static void TraceInformation(string format, params object?[] args)
         {
             trace.TraceEvent(TraceEventType.Information, 0, string.Format(CultureInfo.CurrentCulture, format, args));

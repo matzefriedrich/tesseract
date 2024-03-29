@@ -1,7 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
-    using System.Collections.Generic;
-    using System.IO;
+    using Abstractions;
+
     using NUnit.Framework;
 
     [TestFixture]
@@ -149,7 +149,6 @@
             Assert.That(File.Exists(expectedOutputFilename), $"Expected an xml file \"{expectedOutputFilename}\" to have been created; but none was found.");
         }
 
-
         [Test]
         public void CanRenderResultsIntoTsvFile()
         {
@@ -271,13 +270,11 @@
             using (renderer.BeginDocument(imageName))
             {
                 Assert.AreEqual(renderer.PageNumber, -1);
-                using (Page? page = this._engine?.Process(pix, imageName))
-                {
-                    bool addedPage = renderer.AddPage(page);
+                using Page? page = this._engine?.Process(pix, imageName);
+                bool addedPage = renderer.AddPage(page);
 
-                    Assert.That(addedPage, Is.True);
-                    Assert.That(renderer.PageNumber, Is.EqualTo(0));
-                }
+                Assert.That(addedPage, Is.True);
+                Assert.That(renderer.PageNumber, Is.EqualTo(0));
             }
 
             Assert.AreEqual(renderer.PageNumber, 0);

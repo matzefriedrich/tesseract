@@ -22,7 +22,6 @@
             pix.YRes = (int)Math.Round(img.VerticalResolution);
 
             BitmapData imgData = null;
-            PixData pixData = null;
             try
             {
                 // TODO: Set X and Y resolution
@@ -31,7 +30,7 @@
 
                 // transfer data
                 imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadOnly, img.PixelFormat);
-                pixData = pix.GetData();
+                PixData pixData = pix.GetData();
 
                 if (imgData.PixelFormat == PixelFormat.Format32bppArgb)
                     this.TransferDataFormat32bppArgb(imgData, pixData);
@@ -65,7 +64,7 @@
                 for (var i = 0; i < imgPaletteEntries.Length; i++)
                 {
                     Color paletteEntry = imgPaletteEntries[i];
-                    if (!pixColormap.AddColor(paletteEntry.ToPixColor())) throw new InvalidOperationException(string.Format("Failed to add colormap entry {0}.", i));
+                    if (!pixColormap.AddColor(paletteEntry.ToPixColor())) throw new InvalidOperationException($"Failed to add colormap entry {i}.");
                 }
 
                 pix.Colormap = pixColormap;
@@ -93,7 +92,7 @@
                     return 32;
 
                 default:
-                    throw new InvalidOperationException(string.Format("Source bitmap's pixel format {0} is not supported.", pixelFormat));
+                    throw new InvalidOperationException($"Source bitmap's pixel format {pixelFormat} is not supported.");
             }
         }
 
@@ -138,7 +137,6 @@
 
         private unsafe void TransferDataFormat32bppRgb(BitmapData imgData, PixData pixData)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width;
 
@@ -160,7 +158,6 @@
 
         private unsafe void TransferDataFormat32bppArgb(BitmapData imgData, PixData pixData)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width;
 

@@ -1,7 +1,8 @@
 ﻿namespace Tesseract.Tests
 {
-    using System.Collections.Generic;
     using System.Runtime.Serialization;
+
+    using Abstractions;
 
     [DataContract]
     public class TesseractResultSet
@@ -10,7 +11,7 @@
         public class Page
         {
             public Rect? Region { get; set; }
-            public List<Block> Blocks { get; set; } = new List<Block>();
+            public List<Block> Blocks { get; set; } = new();
         }
 
         [DataContract]
@@ -20,7 +21,7 @@
             public float Confidence { get; set; }
             public string? Text { get; set; }
 
-            public List<Line> Lines { get; set; } = new List<Line>();
+            public List<Line> Lines { get; set; } = new();
         }
 
         [DataContract]
@@ -30,7 +31,7 @@
             public float? Confidence { get; set; }
             public string? Text { get; set; }
 
-            public List<Word> Words { get; set; } = new List<Word>();
+            public List<Word> Words { get; set; } = new();
         }
 
         [DataContract]
@@ -40,7 +41,7 @@
             public float Confidence { get; set; }
             public string? Text { get; set; }
 
-            public List<Symbol> Words { get; set; } = new List<Symbol>();
+            public List<Symbol> Words { get; set; } = new();
         }
 
         [DataContract]

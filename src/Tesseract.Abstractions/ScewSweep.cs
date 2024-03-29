@@ -1,4 +1,4 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
     /// <summary>
     ///     Represents the parameters for a sweep search used by scew algorithms.
@@ -7,11 +7,9 @@
     {
         public static ScewSweep Default = new(DefaultReduction);
 
-
         public const int DefaultReduction = 4; // Sweep part; 4 is good
         public const float DefaultRange = 7.0F;
         public const float DefaultDelta = 1.0F;
-
 
         public ScewSweep(int reduction = DefaultReduction, float range = DefaultRange, float delta = DefaultDelta)
         {
@@ -19,7 +17,6 @@
             this.Range = range;
             this.Delta = delta;
         }
-
 
         public int Reduction { get; }
 

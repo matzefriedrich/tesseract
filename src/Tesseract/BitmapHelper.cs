@@ -14,10 +14,7 @@
             uint green = (val & 0x3E0) >> 5;
             uint blue = val & 0x1F;
 
-            return (((red << 3) | (red >> 2)) << 24) |
-                   (((green << 3) | (green >> 2)) << 16) |
-                   (((blue << 3) | (blue >> 2)) << 8) |
-                   0xFF;
+            return (((red << 3) | (red >> 2)) << 24) | (((green << 3) | (green >> 2)) << 16) | (((blue << 3) | (blue >> 2)) << 8) | 0xFF;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,12 +24,8 @@
             uint green = (val & 0x7E0) >> 5;
             uint blue = val & 0x1F;
 
-            return (((red << 3) | (red >> 2)) << 24) |
-                   (((green << 2) | (green >> 4)) << 16) |
-                   (((blue << 3) | (blue >> 2)) << 8) |
-                   0xFF;
+            return (((red << 3) | (red >> 2)) << 24) | (((green << 2) | (green >> 4)) << 16) | (((blue << 3) | (blue >> 2)) << 8) | 0xFF;
         }
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ConvertArgb1555ToRGBA(uint val)
@@ -42,22 +35,14 @@
             uint green = (val & 0x3E0) >> 5;
             uint blue = val & 0x1F;
 
-            return (((red << 3) | (red >> 2)) << 24) |
-                   (((green << 3) | (green >> 2)) << 16) |
-                   (((blue << 3) | (blue >> 2)) << 8) |
-                   ((alpha << 8) - alpha); // effectively alpha * 255, only works as alpha will be either 0 or 1
+            return (((red << 3) | (red >> 2)) << 24) | (((green << 3) | (green >> 2)) << 16) | (((blue << 3) | (blue >> 2)) << 8) | ((alpha << 8) - alpha); // effectively alpha * 255, only works as alpha will be either 0 or 1
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint EncodeAsRGBA(byte red, byte green, byte blue, byte alpha)
         {
-            return (uint)((red << 24) |
-                          (green << 16) |
-                          (blue << 8) |
-                          alpha);
+            return (uint)((red << 24) | (green << 16) | (blue << 8) | alpha);
         }
-
-        #region Bitmap Data Access
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte GetDataBit(byte* data, int index)
@@ -122,7 +107,5 @@
         {
             *(data + index) = value;
         }
-
-        #endregion
     }
 }

@@ -1,7 +1,5 @@
 ﻿namespace Tesseract.Tests
 {
-    using System;
-
     /// <summary>
     ///     Represents a test run.
     /// </summary>

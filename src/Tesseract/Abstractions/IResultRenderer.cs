@@ -1,4 +1,4 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
     using System;
 

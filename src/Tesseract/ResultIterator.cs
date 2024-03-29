@@ -3,6 +3,9 @@
     using System;
     using System.Collections.Generic;
     using System.Text;
+
+    using Abstractions;
+
     using Interop;
 
     public sealed class ResultIterator : PageIterator
@@ -16,7 +19,7 @@
 
         public float GetConfidence(PageIteratorLevel level)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero)
                 return 0f;
 
@@ -25,7 +28,7 @@
 
         public string GetText(PageIteratorLevel level)
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return string.Empty;
 
             return TessApi.ResultIteratorGetUTF8Text(this.handle, level);
@@ -33,25 +36,17 @@
 
         public FontAttributes GetWordFontAttributes()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return null;
-
-            bool isBold, isItalic, isUnderlined, isMonospace, isSerif, isSmallCaps;
-            int pointSize, fontId;
 
             // per docs (ltrresultiterator.h:104 as of 4897796 in github:tesseract-ocr/tesseract)
             // this return value points to an internal table and should not be deleted.
-            IntPtr nameHandle =
-                TessApi.Native.ResultIteratorWordFontAttributes(this.handle,
-                    out isBold, out isItalic, out isUnderlined,
-                    out isMonospace, out isSerif, out isSmallCaps,
-                    out pointSize, out fontId);
+            IntPtr nameHandle = TessApi.Native.ResultIteratorWordFontAttributes(this.handle, out bool isBold, out bool isItalic, out bool isUnderlined, out bool isMonospace, out bool isSerif, out bool isSmallCaps, out int pointSize, out int fontId);
 
             // This can happen in certain error conditions
             if (nameHandle == IntPtr.Zero) return null;
 
-            FontInfo fontInfo;
-            if (!this._fontInfoCache.TryGetValue(fontId, out fontInfo))
+            if (!this._fontInfoCache.TryGetValue(fontId, out FontInfo fontInfo))
             {
                 string fontName = MarshalHelper.PtrToString(nameHandle, Encoding.UTF8);
                 fontInfo = new FontInfo(fontName, fontId, isItalic, isBold, isMonospace, isSerif);
@@ -63,7 +58,7 @@
 
         public string GetWordRecognitionLanguage()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return null;
 
             return TessApi.ResultIteratorWordRecognitionLanguage(this.handle);
@@ -71,7 +66,7 @@
 
         public bool GetWordIsFromDictionary()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return false;
 
             return TessApi.Native.ResultIteratorWordIsFromDictionary(this.handle);
@@ -79,7 +74,7 @@
 
         public bool GetWordIsNumeric()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return false;
 
             return TessApi.Native.ResultIteratorWordIsNumeric(this.handle);
@@ -87,7 +82,7 @@
 
         public bool GetSymbolIsSuperscript()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return false;
 
             return TessApi.Native.ResultIteratorSymbolIsSuperscript(this.handle);
@@ -95,7 +90,7 @@
 
         public bool GetSymbolIsSubscript()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return false;
 
             return TessApi.Native.ResultIteratorSymbolIsSubscript(this.handle);
@@ -103,7 +98,7 @@
 
         public bool GetSymbolIsDropcap()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this.handle.Handle == IntPtr.Zero) return false;
 
             return TessApi.Native.ResultIteratorSymbolIsDropcap(this.handle);

@@ -6,7 +6,11 @@
     using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Security;
+
+    using Abstractions;
+
     using Internal;
+
     using Interop;
 
     /// <summary>
@@ -241,7 +245,7 @@
         ///     You can only have one result iterator open at any one time.
         /// </remarks>
         /// <param name="image">The image to process.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
+        /// <param name="pageSegMode">The page layout analysis method to use.</param>
         public Page Process(Pix image, PageSegMode? pageSegMode = null)
         {
             return this.Process(image, null, new Rect(0, 0, image.Width, image.Height), pageSegMode);
@@ -469,7 +473,6 @@
         {
             return TessApi.Native.BaseApiPrintVariablesToFile(this.handle, filename) != 0;
         }
-
 
         /// <summary>
         ///     Ties the specified pix to the lifecycle of a page.

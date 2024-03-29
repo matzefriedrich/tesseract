@@ -1,9 +1,18 @@
 ﻿namespace Tesseract
 {
+    using System;
+
     using InteropDotNet;
 
-    public static class TesseractEnviornment
+    public sealed class TesseractEnvironment
     {
+        private readonly LibraryLoader libraryLoader;
+
+        public TesseractEnvironment(LibraryLoader libraryLoader)
+        {
+            this.libraryLoader = libraryLoader ?? throw new ArgumentNullException(nameof(this.libraryLoader));
+        }
+
         /// <summary>
         ///     Gets or sets a search path that will be checked first when attempting to load the Tesseract and Leptonica dlls.
         /// </summary>
@@ -11,10 +20,10 @@
         ///     This search path should not include the platform component as this will automatically be appended to the string
         ///     based on the detected platform.
         /// </remarks>
-        public static string CustomSearchPath
+        public string CustomSearchPath
         {
-            get => LibraryLoader.Instance.CustomSearchPath;
-            set => LibraryLoader.Instance.CustomSearchPath = value;
+            get => this.libraryLoader.CustomSearchPath;
+            set => this.libraryLoader.CustomSearchPath = value;
         }
     }
 }

@@ -1,9 +1,10 @@
 ﻿namespace Tesseract.Tests
 {
-    using System;
-    using System.IO;
+    using Abstractions;
+
     using Interop;
     using Interop.Abstractions;
+
     using NUnit.Framework;
 
     [TestFixture]
@@ -139,7 +140,6 @@
             Assert.That(orientation, Is.EqualTo(expectedOrientationDegrees));
         }
 
-
         [Test]
         public void GetImage(
             [Values(PageIteratorLevel.Block, PageIteratorLevel.Para, PageIteratorLevel.TextLine, PageIteratorLevel.Word, PageIteratorLevel.Symbol)]
@@ -158,7 +158,6 @@
             string destFilename = TestResultRunFile(elementImgFilename);
             elementImg.Save(destFilename, ImageFormat.Png);
         }
-
 
         private void ExpectedOrientation(float rotation, out Orientation orientation, out float deskew)
         {

@@ -16,7 +16,6 @@
             return handle;
         }
 
-
         public static string? PtrToString(IntPtr? handle, Encoding encoding)
         {
             if (encoding == null) throw new ArgumentNullException(nameof(encoding));

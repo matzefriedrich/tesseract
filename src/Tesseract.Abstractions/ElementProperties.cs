@@ -1,7 +1,5 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
-    using Interop;
-
     /// <summary>
     ///     Represents properties that describe a text block's orientation.
     /// </summary>

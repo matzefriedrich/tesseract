@@ -2,6 +2,7 @@
 {
     using System;
     using System.Runtime.InteropServices;
+
     using Interop;
 
     /// <summary>
@@ -22,7 +23,7 @@
         /// <returns>true|false</returns>
         public bool Next()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this._handleRef.Handle == IntPtr.Zero)
                 return false;
             return TessApi.Native.ChoiceIteratorNext(this._handleRef) != 0;
@@ -37,7 +38,7 @@
         /// <returns>float</returns>
         public float GetConfidence()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this._handleRef.Handle == IntPtr.Zero)
                 return 0f;
 
@@ -50,7 +51,7 @@
         /// <returns>string</returns>
         public string GetText()
         {
-            this.VerifyNotDisposed();
+            this.ThrowIfDisposed();
             if (this._handleRef.Handle == IntPtr.Zero)
                 return string.Empty;
 

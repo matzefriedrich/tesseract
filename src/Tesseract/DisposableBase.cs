@@ -1,28 +1,35 @@
 ﻿namespace Tesseract
 {
     using System;
+    using System.ComponentModel;
     using System.Diagnostics;
+
+    using static System.GC;
 
     public abstract class DisposableBase : IDisposable
     {
         private static readonly TraceSource trace = new("Tesseract");
+        private static readonly object disposedEventKey = new();
+        private readonly EventHandlerList events = new();
+        private readonly object lockObject = new();
 
-        protected DisposableBase()
-        {
-            this.IsDisposed = false;
-        }
-
-        public bool IsDisposed { get; private set; }
-
+        protected bool IsDisposed { get; private set; }
 
         public void Dispose()
         {
-            this.Dispose(true);
+            if (this.IsDisposed == false)
+            {
+                this.Dispose(true);
 
-            this.IsDisposed = true;
-            GC.SuppressFinalize(this);
+                this.IsDisposed = true;
+                SuppressFinalize(this);
 
-            if (this.Disposed != null) this.Disposed(this, EventArgs.Empty);
+                this.InvokeDisposed(EventArgs.Empty);
+                this.events.Dispose();
+                return;
+            }
+
+            this.Dispose(false);
         }
 
         ~DisposableBase()
@@ -31,10 +38,34 @@
             trace.TraceEvent(TraceEventType.Warning, 0, "{0} was not disposed off.", this);
         }
 
-        public event EventHandler<EventArgs> Disposed;
+        private void InvokeDisposed(EventArgs e)
+        {
+            lock (this.lockObject)
+            {
+                var handler = this.events[disposedEventKey] as EventHandler<EventArgs>;
+                handler?.Invoke(this, e);
+            }
+        }
 
+        public event EventHandler<EventArgs> Disposed
+        {
+            add
+            {
+                lock (this.lockObject)
+                {
+                    this.events.AddHandler(disposedEventKey, value);
+                }
+            }
+            remove
+            {
+                lock (this.lockObject)
+                {
+                    this.events.RemoveHandler(disposedEventKey, value);
+                }
+            }
+        }
 
-        protected virtual void VerifyNotDisposed()
+        protected void ThrowIfDisposed()
         {
             if (this.IsDisposed) throw new ObjectDisposedException(this.ToString());
         }

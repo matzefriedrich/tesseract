@@ -1,4 +1,4 @@
-namespace Tesseract
+namespace Tesseract.Abstractions
 {
     /// <summary>
     ///     Rendered formats supported by Tesseract.

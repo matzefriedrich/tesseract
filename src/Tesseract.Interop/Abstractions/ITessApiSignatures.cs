@@ -1,7 +1,10 @@
 ﻿namespace Tesseract.Interop.Abstractions
 {
     using System.Runtime.InteropServices;
+
     using InteropDotNet;
+
+    using Tesseract.Abstractions;
 
     /// <summary>
     ///     The exported tesseract api signatures.

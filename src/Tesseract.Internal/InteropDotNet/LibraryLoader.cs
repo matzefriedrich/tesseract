@@ -5,6 +5,7 @@
 namespace InteropDotNet
 {
     using System.Reflection;
+
     using Tesseract.Abstractions;
     using Tesseract.Internal;
 
@@ -78,7 +79,7 @@ namespace InteropDotNet
                     if (dllHandle != IntPtr.Zero)
                         this.loadedAssemblies[fileName] = dllHandle;
                     else
-                        throw new DllNotFoundException(string.Format("Failed to find library \"{0}\" for platform {1}.", fileName, platformName));
+                        throw new DllNotFoundException($"Failed to find library \"{fileName}\" for platform {platformName}.");
                 }
 
                 return this.loadedAssemblies[fileName];
@@ -187,7 +188,7 @@ namespace InteropDotNet
         public IntPtr GetProcAddress(IntPtr dllHandle, string name)
         {
             IntPtr procAddress = this.logic.GetProcAddress(dllHandle, name);
-            if (procAddress == IntPtr.Zero) throw new LoadLibraryException(string.Format("Failed to load proc {0}", name));
+            if (procAddress == IntPtr.Zero) throw new LoadLibraryException($"Failed to load proc {name}");
 
             return procAddress;
         }

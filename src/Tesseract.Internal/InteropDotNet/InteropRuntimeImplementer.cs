@@ -14,9 +14,9 @@ namespace InteropDotNet
         {
             Type interfaceType = typeof(T);
             if (!typeof(T).IsInterface)
-                throw new Exception(string.Format("The type {0} should be an interface", interfaceType.Name));
+                throw new Exception($"The type {interfaceType.Name} should be an interface");
             if (!interfaceType.IsPublic)
-                throw new Exception(string.Format("The interface {0} should be public", interfaceType.Name));
+                throw new Exception($"The interface {interfaceType.Name} should be public");
 
             string assemblyName = GetAssemblyName(interfaceType);
             AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
@@ -250,7 +250,7 @@ namespace InteropDotNet
         {
             object[] attributes = methodInfo.GetCustomAttributes(typeof(RuntimeDllImportAttribute), true);
             if (attributes.Length == 0)
-                throw new Exception(string.Format("RuntimeDllImportAttribute for method '{0}' not found", methodInfo.Name));
+                throw new Exception($"RuntimeDllImportAttribute for method '{methodInfo.Name}' not found");
             return (RuntimeDllImportAttribute)attributes[0];
         }
 
@@ -281,8 +281,11 @@ namespace InteropDotNet
         {
             MethodBuilder methodBuilder = typeBuilder.DefineMethod(name, attributes, returnType, GetParameterTypeArray(infoArray));
             for (var parameterIndex = 0; parameterIndex < infoArray.Length; parameterIndex++)
+            {
                 methodBuilder.DefineParameter(parameterIndex + 1,
                     infoArray[parameterIndex].Attributes, infoArray[parameterIndex].Name);
+            }
+
             return methodBuilder;
         }
 
@@ -345,8 +348,11 @@ namespace InteropDotNet
             ParameterInfo[] parameters = methodInfo.GetParameters();
             var infoList = new List<LightParameterInfo>();
             for (var i = 0; i < parameters.Length; i++)
+            {
                 if (mode != InfoArrayMode.EndInvoke || parameters[i].ParameterType.IsByRef)
                     infoList.Add(new LightParameterInfo(parameters[i]));
+            }
+
             if (mode == InfoArrayMode.BeginInvoke)
             {
                 infoList.Add(new LightParameterInfo(typeof(AsyncCallback), "callback"));
@@ -375,12 +381,12 @@ namespace InteropDotNet
 
         private static string GetAssemblyName(Type interfaceType)
         {
-            return string.Format("InteropRuntimeImplementer.{0}Instance", GetSubstantialName(interfaceType));
+            return $"InteropRuntimeImplementer.{GetSubstantialName(interfaceType)}Instance";
         }
 
         private static string GetImplementationTypeName(string assemblyName, Type interfaceType)
         {
-            return string.Format("{0}.{1}Implementation", assemblyName, GetSubstantialName(interfaceType));
+            return $"{assemblyName}.{GetSubstantialName(interfaceType)}Implementation";
         }
 
         private static string GetSubstantialName(Type interfaceType)
@@ -393,7 +399,7 @@ namespace InteropDotNet
 
         private static string GetDelegateName(string assemblyName, MethodInfo methodInfo)
         {
-            return string.Format("{0}.{1}Delegate", assemblyName, methodInfo.Name);
+            return $"{assemblyName}.{methodInfo.Name}Delegate";
         }
 
         #endregion

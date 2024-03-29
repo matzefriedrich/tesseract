@@ -1,6 +1,7 @@
 ﻿namespace Tesseract.Interop.Abstractions
 {
     using System.Runtime.InteropServices;
+
     using InteropDotNet;
 
     /// <summary>
@@ -61,7 +62,6 @@
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixGetHeight")]
         int pixGetHeight(HandleRef pix);
 
-
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixGetDepth")]
         int pixGetDepth(HandleRef pix);
 
@@ -86,13 +86,11 @@
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixSetResolution")]
         int pixSetResolution(HandleRef pix, int xres, int yres);
 
-
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixScaleResolution")]
         int pixScaleResolution(HandleRef pix, float xscale, float yscale);
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixGetData")]
         IntPtr pixGetData(HandleRef pix);
-
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixGetInputFormat")]
         ImageFormat pixGetInputFormat(HandleRef pix);
@@ -137,7 +135,6 @@
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixConvertTo8")]
         IntPtr pixConvertTo8(HandleRef pix, int cmapflag);
-
 
         // image analysis and manipulation functions
 
@@ -222,10 +219,8 @@
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixOtsuAdaptiveThreshold")]
         int pixOtsuAdaptiveThreshold(HandleRef pix, int sx, int sy, int smoothx, int smoothy, float scorefract, out IntPtr ppixth, out IntPtr ppixd);
 
-
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixSauvolaBinarize")]
         int pixSauvolaBinarize(HandleRef pix, int whsize, float factor, int addborder, out IntPtr ppixm, out IntPtr ppixsd, out IntPtr ppixth, out IntPtr ppixd);
-
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixSauvolaBinarizeTiled")]
         int pixSauvolaBinarizeTiled(HandleRef pix, int whsize, float factor, int nx, int ny, out IntPtr ppixth, out IntPtr ppixd);
@@ -301,7 +296,6 @@
         /// <returns>Returns the number of free color entries in the color map, or 0 on error.</returns>
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapGetFreeCount")]
         int pixcmapGetFreeCount(HandleRef cmap);
-
 
         /// <returns>Returns color maps depth, or 0 on error.</returns>
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapGetDepth")]
@@ -438,14 +432,12 @@
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapGetIndex")]
         int pixcmapGetIndex(HandleRef cmap, int redValue, int blueValue, int greenValue, out int index);
 
-
         /// <summary>
         ///     Returns 0 if the color exists in the color map; otherwise 1.
         /// </summary>
         /// <returns>Returns 0 if OK; 1 on error.</returns>
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapHasColor")]
         int pixcmapHasColor(HandleRef cmap, int color);
-
 
         /// <summary>
         ///     Returns the number of unique grey colors including black and white.
@@ -460,7 +452,6 @@
         /// <returns>Returns 0 if OK; 1 on error.</returns>
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapCountGrayColors")]
         int pixcmapGetRankIntensity(HandleRef cmap, float rankVal, out int index);
-
 
         /// <summary>
         ///     Finds the index of the color entry closest to the specified color.
@@ -484,7 +475,6 @@
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapGrayToColor")]
         IntPtr pixcmapGrayToColor(int color);
 
-
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapColorToGray")]
         IntPtr pixcmapColorToGray(HandleRef cmaps, float redWeight, float greenWeight, float blueWeight);
 
@@ -493,14 +483,11 @@
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapColorToGray")]
         int pixcmapToArrays(HandleRef cmap, out IntPtr redMap, out IntPtr blueMap, out IntPtr greenMap);
 
-
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapToRGBTable")]
         int pixcmapToRGBTable(HandleRef cmap, out IntPtr colorTable, out int colorCount);
 
-
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapSerializeToMemory")]
         int pixcmapSerializeToMemory(HandleRef cmap, out int components, out int colorCount, out IntPtr colorData, out int colorDataLength);
-
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapDeserializeFromMemory")]
         IntPtr pixcmapDeserializeFromMemory(HandleRef colorData, int colorCount, int colorDataLength);
@@ -509,7 +496,6 @@
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapGammaTRC")]
         int pixcmapGammaTRC(HandleRef cmap, float gamma, int minVal, int maxVal);
-
 
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixcmapContrastTRC")]
         int pixcmapContrastTRC(HandleRef cmap, float factor);

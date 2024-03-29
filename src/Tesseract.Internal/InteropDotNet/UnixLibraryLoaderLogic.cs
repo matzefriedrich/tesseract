@@ -5,6 +5,7 @@
 namespace InteropDotNet
 {
     using System.Runtime.InteropServices;
+
     using Tesseract.Internal;
 
     internal class UnixLibraryLoaderLogic : ILibraryLoaderLogic

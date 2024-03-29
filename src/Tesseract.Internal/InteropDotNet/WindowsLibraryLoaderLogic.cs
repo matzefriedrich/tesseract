@@ -5,6 +5,7 @@
 namespace InteropDotNet
 {
     using System.Runtime.InteropServices;
+
     using Tesseract.Abstractions;
     using Tesseract.Internal;
 
@@ -72,15 +73,17 @@ namespace InteropDotNet
             {
                 int lastError = WindowsGetLastError();
                 throw new LoadLibraryException(
-                    string.Format("Failed to load native function \"{0}\" from library with handle  {1}.\r\nLast Error:{1}\r\nCheck inner exception and\\or windows event log.\r\nInner Exception: {2}", functionName, libraryHandle, lastError, e),
-                    e);
+                    $"Failed to load native function \"{functionName}\" from library with handle  {libraryHandle}.\r\n" +
+                    $"Last Error:{libraryHandle}\r\n" +
+                    $"Check inner exception and\\or windows event log.\r\n" +
+                    $"Inner Exception: {lastError}", e);
             }
         }
 
         public string FixUpLibraryName(string fileName)
         {
             if (!string.IsNullOrEmpty(fileName) && !fileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-                return fileName + ".dll";
+                return $"{fileName}.dll";
             return fileName;
         }
 

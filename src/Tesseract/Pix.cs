@@ -4,6 +4,9 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.InteropServices;
+
+    using Abstractions;
+
     using Interop;
     using Interop.Abstractions;
 
@@ -55,7 +58,6 @@
             { ".bmp", ImageFormat.Bmp }
         };
 
-
         private PixColormap colormap;
         private HandleRef handle;
 
@@ -68,7 +70,7 @@
         /// <param name="handle"></param>
         private Pix(IntPtr handle)
         {
-            if (handle == IntPtr.Zero) throw new ArgumentNullException("handle");
+            if (handle == IntPtr.Zero) throw new ArgumentNullException(nameof(handle));
 
             this.handle = new HandleRef(this, handle);
             this.Width = LeptonicaApi.Native.pixGetWidth(this.handle);
@@ -78,7 +80,6 @@
             IntPtr colorMapHandle = LeptonicaApi.Native.pixGetColormap(this.handle);
             if (colorMapHandle != IntPtr.Zero) this.colormap = new PixColormap(colorMapHandle);
         }
-
 
         public PixColormap Colormap
         {
@@ -143,18 +144,16 @@
             if (!format.HasValue)
             {
                 string extension = Path.GetExtension(filename).ToLowerInvariant();
-                if (!imageFomatLookup.TryGetValue(extension, out actualFormat))
-                    // couldn't find matching format, perhaps there is no extension or it's not recognised, fallback to default.
-                    actualFormat = ImageFormat.Default;
+                // couldn't find matching format, perhaps there is no extension or it's not recognised, fallback to default.
+                actualFormat = imageFomatLookup.GetValueOrDefault(extension, ImageFormat.Default);
             }
             else
             {
                 actualFormat = format.Value;
             }
 
-            if (LeptonicaApi.Native.pixWrite(filename, this.handle, actualFormat) != 0) throw new IOException(string.Format("Failed to save image '{0}'.", filename));
+            if (LeptonicaApi.Native.pixWrite(filename, this.handle, actualFormat) != 0) throw new IOException($"Failed to save image '{filename}'.");
         }
-
 
         /// <summary>
         ///     Increments this pix's reference count and returns a reference to the same pix data.
@@ -178,7 +177,6 @@
             IntPtr clonedHandle = LeptonicaApi.Native.pixClone(this.handle);
             return new Pix(clonedHandle);
         }
-
 
         /// <summary>
         ///     Scales the current pix by the specified <paramref name="scaleX" /> and <paramref name="scaleY" /> factors returning
@@ -307,7 +305,6 @@
             return new Pix(result);
         }
 
-
         protected override void Dispose(bool disposing)
         {
             IntPtr tmpHandle = this.handle.Handle;
@@ -318,10 +315,10 @@
         public static Pix Create(int width, int height, int depth)
         {
             if (!AllowedDepths.Contains(depth))
-                throw new ArgumentException("Depth must be 1, 2, 4, 8, 16, or 32 bits.", "depth");
+                throw new ArgumentException("Depth must be 1, 2, 4, 8, 16, or 32 bits.", nameof(depth));
 
-            if (width <= 0) throw new ArgumentException("Width must be greater than zero", "width");
-            if (height <= 0) throw new ArgumentException("Height must be greater than zero", "height");
+            if (width <= 0) throw new ArgumentException("Width must be greater than zero", nameof(width));
+            if (height <= 0) throw new ArgumentException("Height must be greater than zero", nameof(height));
 
             IntPtr handle = LeptonicaApi.Native.pixCreate(width, height, depth);
             if (handle == IntPtr.Zero) throw new InvalidOperationException("Failed to create pix, this normally occurs because the requested image size is too large, please check Standard Error Output.");
@@ -339,7 +336,7 @@
         public static Pix LoadFromFile(string filename)
         {
             IntPtr pixHandle = LeptonicaApi.Native.pixRead(filename);
-            if (pixHandle == IntPtr.Zero) throw new IOException(string.Format("Failed to load image '{0}'.", filename));
+            if (pixHandle == IntPtr.Zero) throw new IOException($"Failed to load image '{filename}'.");
             return Create(pixHandle);
         }
 
@@ -372,7 +369,7 @@
             IntPtr handle;
             handle = LeptonicaApi.Native.pixReadFromMultipageTiff(filename, ref offset);
 
-            if (handle == IntPtr.Zero) throw new IOException(string.Format("Failed to load image from multi-page Tiff at offset {0}.", offset));
+            if (handle == IntPtr.Zero) throw new IOException($"Failed to load image from multi-page Tiff at offset {offset}.");
             return Create(handle);
         }
 
@@ -380,7 +377,6 @@
         {
             return new PixData(this);
         }
-
 
         public override bool Equals(object obj)
         {
@@ -390,7 +386,6 @@
 
             return this.Equals((Pix)obj);
         }
-
 
         /// <summary>
         ///     Binarization of the input image based on the passed parameters and the Otsu method
@@ -534,7 +529,7 @@
         /// <param name="gwt">Green weight</param>
         /// <param name="bwt">Blue weight</param>
         /// <returns>The Grayscale pix.</returns>
-        public Pix ConvertRGBToGray(float rwt, float gwt, float bwt)
+        public Pix ConvertRGBToGray(float rwt = 0, float gwt = 0, float bwt = 0)
         {
             if (this.Depth != 32) throw new InvalidOperationException("The source image must have a depth of 32 (32 bpp).");
             if (rwt < 0) throw new ArgumentException("All weights must be greater than or equal to zero; red was not.");
@@ -544,15 +539,6 @@
             IntPtr resultPixHandle = LeptonicaApi.Native.pixConvertRGBToGray(this.handle, rwt, gwt, bwt);
             if (resultPixHandle == IntPtr.Zero) throw new TesseractException("Failed to convert to grayscale.");
             return new Pix(resultPixHandle);
-        }
-
-        /// <summary>
-        ///     Conversion from RBG to 8bpp grayscale.
-        /// </summary>
-        /// <returns>The Grayscale pix.</returns>
-        public Pix ConvertRGBToGray()
-        {
-            return this.ConvertRGBToGray(0, 0, 0);
         }
 
         /// <summary>
@@ -684,8 +670,7 @@
         /// <returns>Returns deskewed image if confidence was high enough, otherwise returns clone of original pix.</returns>
         public Pix Deskew()
         {
-            Scew scew;
-            return this.Deskew(DefaultBinarySearchReduction, out scew);
+            return this.Deskew(DefaultBinarySearchReduction, out Scew _);
         }
 
         /// <summary>
@@ -737,8 +722,7 @@
         /// <returns>Returns deskewed image if confidence was high enough, otherwise returns clone of original pix.</returns>
         public Pix Deskew(ScewSweep sweep, int redSearch, int thresh, out Scew scew)
         {
-            float pAngle, pConf;
-            IntPtr resultPixHandle = LeptonicaApi.Native.pixDeskewGeneral(this.handle, sweep.Reduction, sweep.Range, sweep.Delta, redSearch, thresh, out pAngle, out pConf);
+            IntPtr resultPixHandle = LeptonicaApi.Native.pixDeskewGeneral(this.handle, sweep.Reduction, sweep.Range, sweep.Delta, redSearch, thresh, out float pAngle, out float pConf);
             if (resultPixHandle == IntPtr.Zero) throw new TesseractException("Failed to deskew image.");
             scew = new Scew(pAngle, pConf);
             return new Pix(resultPixHandle);

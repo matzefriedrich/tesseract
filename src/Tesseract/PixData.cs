@@ -1,19 +1,20 @@
 ﻿namespace Tesseract
 {
     using System;
+    using System.Runtime.CompilerServices;
+
     using Interop;
 
     public unsafe class PixData
     {
-        public Pix Pix { get; }
-
-
         internal PixData(Pix pix)
         {
             this.Pix = pix;
             this.Data = LeptonicaApi.Native.pixGetData(this.Pix.Handle);
             this.WordsPerLine = LeptonicaApi.Native.pixGetWpl(this.Pix.Handle);
         }
+
+        public Pix Pix { get; }
 
         /// <summary>
         ///     Pointer to the data.
@@ -39,9 +40,7 @@
             LeptonicaApi.Native.pixEndianByteSwap(this.Pix.Handle);
         }
 
-#if Net45
-       	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint EncodeAsRGBA(byte red, byte green, byte blue, byte alpha)
         {
             return (uint)((red << 24) |
@@ -53,21 +52,16 @@
         /// <summary>
         ///     Gets the pixel value for a 1bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetDataBit(uint* data, int index)
         {
             return (*(data + (index >> 5)) >> (31 - (index & 31))) & 1;
         }
 
-
         /// <summary>
         ///     Sets the pixel value for a 1bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDataBit(uint* data, int index, uint value)
         {
             uint* wordPtr = data + (index >> 5);
@@ -75,25 +69,19 @@
             *wordPtr |= value << (31 - (index & 31));
         }
 
-
         /// <summary>
         ///     Gets the pixel value for a 2bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetDataDIBit(uint* data, int index)
         {
             return (*(data + (index >> 4)) >> (2 * (15 - (index & 15)))) & 3;
         }
 
-
         /// <summary>
         ///     Sets the pixel value for a 2bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDataDIBit(uint* data, int index, uint value)
         {
             uint* wordPtr = data + (index >> 4);
@@ -101,25 +89,19 @@
             *wordPtr |= (value & 3) << (30 - 2 * (index & 15));
         }
 
-
         /// <summary>
         ///     Gets the pixel value for a 4bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetDataQBit(uint* data, int index)
         {
             return (*(data + (index >> 3)) >> (4 * (7 - (index & 7)))) & 0xf;
         }
 
-
         /// <summary>
         ///     Sets the pixel value for a 4bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDataQBit(uint* data, int index, uint value)
         {
             uint* wordPtr = data + (index >> 3);
@@ -127,13 +109,10 @@
             *wordPtr |= (value & 15) << (28 - 4 * (index & 7));
         }
 
-
         /// <summary>
         ///     Gets the pixel value for a 8bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetDataByte(uint* data, int index)
         {
             // Must do direct size comparison to detect x64 process, since in this will be jited out and results in a lot faster code (e.g. 6x faster for image conversion)
@@ -144,13 +123,10 @@
             //return *((byte*)data + index);  
         }
 
-
         /// <summary>
         ///     Sets the pixel value for a 8bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDataByte(uint* data, int index, uint value)
         {
             // Must do direct size comparison to detect x64 process, since in this will be jited out and results in a lot faster code (e.g. 6x faster for image conversion)
@@ -163,13 +139,10 @@
             // *((byte*)data + index) =  (byte)value;
         }
 
-
         /// <summary>
         ///     Gets the pixel value for a 16bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetDataTwoByte(uint* data, int index)
         {
             // Must do direct size comparison to detect x64 process, since in this will be jited out and results in a lot faster code (e.g. 6x faster for image conversion)
@@ -180,13 +153,10 @@
             // return *((ushort*)data + index);
         }
 
-
         /// <summary>
         ///     Sets the pixel value for a 16bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDataTwoByte(uint* data, int index, uint value)
         {
             // Must do direct size comparison to detect x64 process, since in this will be jited out and results in a lot faster code (e.g. 6x faster for image conversion)
@@ -198,25 +168,19 @@
             //*((ushort*)data + index) = (ushort)value;
         }
 
-
         /// <summary>
         ///     Gets the pixel value for a 32bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetDataFourByte(uint* data, int index)
         {
             return *(data + index);
         }
 
-
         /// <summary>
         ///     Sets the pixel value for a 32bpp image.
         /// </summary>
-#if Net45
-      	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDataFourByte(uint* data, int index, uint value)
         {
             *(data + index) = value;
