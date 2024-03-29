@@ -20,19 +20,16 @@
 
         public static void Cmd(string command, params object[] arguments)
         {
-            int exitCode;
-            ProcessStartInfo processInfo;
-            Process process;
-
             string argumentStr = string.Join(" ", arguments.Select(x => $"\"{x}\""));
-            processInfo = new ProcessStartInfo(command, argumentStr);
-            processInfo.CreateNoWindow = true;
-            processInfo.UseShellExecute = false;
-            // *** Redirect the output ***
-            processInfo.RedirectStandardError = true;
-            processInfo.RedirectStandardOutput = true;
+            var processInfo = new ProcessStartInfo(command, argumentStr)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
 
-            process = Process.Start(processInfo);
+            Process process = Process.Start(processInfo) ?? throw new ArgumentNullException("Process.Start(processInfo)");
             process.WaitForExit();
 
             // *** Read the streams ***
@@ -40,7 +37,7 @@
             string output = process.StandardOutput.ReadToEnd();
             string error = process.StandardError.ReadToEnd();
 
-            exitCode = process.ExitCode;
+            int exitCode = process.ExitCode;
 
             Console.WriteLine("output>>" + (string.IsNullOrEmpty(output) ? "(none)" : output));
             Console.WriteLine("error>>" + (string.IsNullOrEmpty(error) ? "(none)" : error));

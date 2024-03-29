@@ -1,10 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AssemblyVersion>5.2.0</AssemblyVersion>
+        <Authors>Matthias Friedrich</Authors>
+        <Copyright>Copyright 2012-2024 Charles Weld, Matthias Friedrich</Copyright>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackageId>Tesseract.Interop</PackageId>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/matzefriedrich/tesseract</RepositoryUrl>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Version>5.2.0</Version>
     </PropertyGroup>
 
     <ItemGroup>

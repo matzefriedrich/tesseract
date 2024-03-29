@@ -29,19 +29,15 @@
             }
         }
 
-        private TesseractEngine Engine { get; set; }
-        private Pix EmptyPix { get; set; }
+        private TesseractEngine? Engine { get; set; }
+        private Pix? EmptyPix { get; set; }
 
         [Theory]
         public void GetTextReturnNullForEachLevel(PageIteratorLevel level)
         {
-            using (Page page = this.Engine.Process(this.EmptyPix))
-            {
-                using (ResultIterator iter = page.GetIterator())
-                {
-                    Assert.That(iter.GetText(level), Is.Null);
-                }
-            }
+            using Page page = this.Engine?.Process(this.EmptyPix) ?? throw new ArgumentNullException("this.Engine?.Process(this.EmptyPix)");
+            using ResultIterator iter = page.GetIterator();
+            Assert.That(iter.GetText(level), Is.Null);
         }
     }
 }

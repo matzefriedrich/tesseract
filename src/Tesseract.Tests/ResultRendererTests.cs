@@ -23,7 +23,7 @@
             }
         }
 
-        private TesseractEngine _engine;
+        private TesseractEngine? _engine;
 
         [Test]
         public void CanRenderResultsIntoTextFile()
@@ -252,7 +252,7 @@
                 Assert.AreEqual(renderer.PageNumber, expectedPageNumber);
                 foreach (Pix pix in pixA)
                 {
-                    using Page page = this._engine.Process(pix, imageName);
+                    using Page? page = this._engine?.Process(pix, imageName);
                     bool addedPage = renderer.AddPage(page);
                     expectedPageNumber++;
 
@@ -267,46 +267,42 @@
         private void ProcessFile(IResultRenderer renderer, string filename)
         {
             string imageName = Path.GetFileNameWithoutExtension(filename);
-            using (Pix pix = Pix.LoadFromFile(filename))
+            using Pix pix = Pix.LoadFromFile(filename);
+            using (renderer.BeginDocument(imageName))
             {
-                using (renderer.BeginDocument(imageName))
+                Assert.AreEqual(renderer.PageNumber, -1);
+                using (Page? page = this._engine?.Process(pix, imageName))
                 {
-                    Assert.AreEqual(renderer.PageNumber, -1);
-                    using (Page page = this._engine.Process(pix, imageName))
-                    {
-                        bool addedPage = renderer.AddPage(page);
+                    bool addedPage = renderer.AddPage(page);
 
-                        Assert.That(addedPage, Is.True);
-                        Assert.That(renderer.PageNumber, Is.EqualTo(0));
-                    }
+                    Assert.That(addedPage, Is.True);
+                    Assert.That(renderer.PageNumber, Is.EqualTo(0));
                 }
-
-                Assert.AreEqual(renderer.PageNumber, 0);
             }
+
+            Assert.AreEqual(renderer.PageNumber, 0);
         }
 
         private void ProcessImageFile(IResultRenderer renderer, string filename)
         {
             string imageName = Path.GetFileNameWithoutExtension(filename);
-            using (PixArray pixA = this.ReadImageFileIntoPixArray(filename))
+            using PixArray pixA = this.ReadImageFileIntoPixArray(filename);
+            int expectedPageNumber = -1;
+            using (renderer.BeginDocument(imageName))
             {
-                int expectedPageNumber = -1;
-                using (renderer.BeginDocument(imageName))
+                Assert.AreEqual(renderer.PageNumber, expectedPageNumber);
+                foreach (Pix pix in pixA)
                 {
-                    Assert.AreEqual(renderer.PageNumber, expectedPageNumber);
-                    foreach (Pix pix in pixA)
-                        using (Page page = this._engine.Process(pix, imageName))
-                        {
-                            bool addedPage = renderer.AddPage(page);
-                            expectedPageNumber++;
+                    using Page? page = this._engine?.Process(pix, imageName);
+                    bool addedPage = renderer.AddPage(page);
+                    expectedPageNumber++;
 
-                            Assert.That(addedPage, Is.True);
-                            Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
-                        }
+                    Assert.That(addedPage, Is.True);
+                    Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
                 }
-
-                Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
             }
+
+            Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
         }
 
         private PixArray ReadImageFileIntoPixArray(string filename)

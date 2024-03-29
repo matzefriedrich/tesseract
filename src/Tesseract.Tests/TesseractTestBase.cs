@@ -53,7 +53,8 @@
 
         protected static string TestResultRunFile(string path)
         {
-            string testRunDirectory = TestResultRunDirectory(Path.GetDirectoryName(path));
+            string? directoryName = Path.GetDirectoryName(path) ?? throw new ArgumentNullException("Path.GetDirectoryName(path)");
+            string testRunDirectory = TestResultRunDirectory(directoryName);
             string testFileName = Path.GetFileName(path);
 
             return Path.GetFullPath(Path.Combine(testRunDirectory, testFileName));

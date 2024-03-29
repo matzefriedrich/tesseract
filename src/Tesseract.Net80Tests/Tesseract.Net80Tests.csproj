@@ -1,11 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
-
+        <AssemblyVersion>5.2.0</AssemblyVersion>
+        <Authors>Matthias Friedrich</Authors>
+        <Copyright>Copyright 2012-2024 Charles Weld, Matthias Friedrich</Copyright>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
-        <DefineConstants>NET48;NETFULL</DefineConstants>
+        <Nullable>enable</Nullable>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/matzefriedrich/tesseract</RepositoryUrl>
         <RootNamespace>Tesseract.Tests</RootNamespace>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Version>5.2.0</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
