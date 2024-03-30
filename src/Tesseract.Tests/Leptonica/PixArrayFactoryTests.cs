@@ -1,29 +1,27 @@
-﻿namespace Tesseract.Tests
+﻿namespace Tesseract.Tests.Leptonica.PixTests
 {
-    using Interop.Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
 
     using NUnit.Framework;
 
     [TestFixture]
-    public class BaseApiTests
+    public class PixArrayFactoryTests : TesseractTestBase
     {
         [Test]
-        public void CanGetVersion()
+        public void PixArrayFactory_Create_returns_empty_PixArray()
         {
             // Arrange
             var services = new ServiceCollection();
             services.AddTesseract();
 
             using ServiceProvider provider = services.BuildServiceProvider();
-            var sut = provider.GetRequiredService<IManagedTesseractApi>();
+            var factory = provider.GetRequiredService<IPixArrayFactory>();
 
             // Act
-            string? version = sut.BaseApiGetVersion();
+            using PixArray pixA = factory.Create(0);
 
             // Assert
-            Assert.That(version, Does.StartWith("5.0.0"));
+            Assert.That(pixA.Count, Is.EqualTo(0));
         }
     }
 }

@@ -4,11 +4,26 @@
     using System.Drawing;
     using System.Drawing.Imaging;
 
+    using Abstractions;
+
+    using JetBrains.Annotations;
+
     /// <summary>
     ///     Converts a <see cref="Bitmap" /> to a <see cref="Pix" />.
     /// </summary>
     internal sealed class BitmapToPixConverter : IBitmapToPixConverter
     {
+        private readonly IPixFactory pixFactory;
+        private readonly IPixColorMapFactory pixColorMapFactory;
+
+        public BitmapToPixConverter(
+            [NotNull] IPixFactory pixFactory,
+            [NotNull] IPixColorMapFactory pixColorMapFactory)
+        {
+            this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
+            this.pixColorMapFactory = pixColorMapFactory ?? throw new ArgumentNullException(nameof(pixColorMapFactory));
+        }
+        
         /// <summary>
         ///     Converts the specified <paramref name="img" /> to a <see cref="Pix" />.
         /// </summary>
@@ -17,7 +32,7 @@
         public Pix Convert(Bitmap img)
         {
             int pixDepth = this.GetPixDepth(img.PixelFormat);
-            var pix = Pix.Create(img.Width, img.Height, pixDepth);
+            Pix pix = this.pixFactory.Create(img.Width, img.Height, pixDepth);
             pix.XRes = (int)Math.Round(img.HorizontalResolution);
             pix.YRes = (int)Math.Round(img.VerticalResolution);
 
@@ -58,7 +73,7 @@
         {
             ColorPalette imgPalette = img.Palette;
             Color[] imgPaletteEntries = imgPalette.Entries;
-            var pixColormap = PixColormap.Create(pix.Depth);
+            PixColormap pixColormap = this.pixColorMapFactory.Create(pix.Depth);
             try
             {
                 for (var i = 0; i < imgPaletteEntries.Length; i++)

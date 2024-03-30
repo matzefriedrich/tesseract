@@ -4,6 +4,8 @@ namespace Tesseract.Tests.ResultIteratorTests
 
     using Interop;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     using NUnit.Framework;
 
     [TestFixture]
@@ -12,33 +14,30 @@ namespace Tesseract.Tests.ResultIteratorTests
         [SetUp]
         public void Init()
         {
-            this.Engine = CreateEngine(mode: EngineMode.TesseractOnly);
-            this.TestImage = LoadTestPix("Ocr/Fonts.tif");
+            this.services.AddTesseract();
+            this.provider = this.services.BuildServiceProvider();
         }
 
         [TearDown]
         public void Dispose()
         {
-            if (this.TestImage != null)
-            {
-                this.TestImage.Dispose();
-                this.TestImage = null;
-            }
-
-            if (this.Engine != null)
-            {
-                this.Engine.Dispose();
-                this.Engine = null;
-            }
+            this.provider?.Dispose();
         }
 
-        private TesseractEngine? Engine { get; set; }
-        private Pix? TestImage { get; set; }
+        private readonly ServiceCollection services = new();
+        private ServiceProvider? provider;
 
         [Test]
         public void GetWordFontAttributesWorks()
         {
-            using Page page = this.Engine?.Process(this.TestImage) ?? throw new ArgumentNullException("this.Engine?.Process(this.TestImage)");
+            // Arrange
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
+            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+
+            using ITesseractEngine engine = engineFactory(new TesseractEngineOptionBuilder(DataPath, mode: EngineMode.TesseractOnly).Build());
+            using Pix testImage = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath("Ocr/Fonts.tif"));
+
+            using Page page = engine.Process(testImage) ?? throw new ArgumentNullException("this.Engine?.Process(this.TestImage)");
             using ResultIterator iter = page.GetIterator();
             // font attributes come in this order in the test image:
             // bold, italic, monospace, serif, smallcaps

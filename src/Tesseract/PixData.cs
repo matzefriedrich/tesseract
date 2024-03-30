@@ -3,15 +3,20 @@
     using System;
     using System.Runtime.CompilerServices;
 
-    using Interop;
+    using Interop.Abstractions;
+
+    using JetBrains.Annotations;
 
     public unsafe class PixData
     {
-        internal PixData(Pix pix)
+        private readonly ILeptonicaApiSignatures leptonicaApi;
+
+        internal PixData([NotNull] ILeptonicaApiSignatures leptonicaApi, Pix pix)
         {
+            this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
             this.Pix = pix;
-            this.Data = LeptonicaApi.Native.pixGetData(this.Pix.Handle);
-            this.WordsPerLine = LeptonicaApi.Native.pixGetWpl(this.Pix.Handle);
+            this.Data = this.leptonicaApi.pixGetData(this.Pix.Handle);
+            this.WordsPerLine = this.leptonicaApi.pixGetWpl(this.Pix.Handle);
         }
 
         public Pix Pix { get; }
@@ -37,7 +42,7 @@
         /// </remarks>
         public void EndianByteSwap()
         {
-            LeptonicaApi.Native.pixEndianByteSwap(this.Pix.Handle);
+            this.leptonicaApi.pixEndianByteSwap(this.Pix.Handle);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

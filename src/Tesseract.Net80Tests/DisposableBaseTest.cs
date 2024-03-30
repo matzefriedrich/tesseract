@@ -1,5 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
+    using Abstractions;
+
     using Moq;
 
     using NUnit.Framework;

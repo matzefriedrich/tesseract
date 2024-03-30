@@ -13,16 +13,32 @@
     using Interop;
     using Interop.Abstractions;
 
+    using JetBrains.Annotations;
+
     public sealed class Page : DisposableBase
     {
+        private readonly IManagedTesseractApi api;
+        private readonly ITessApiSignatures nativeApi;
+        private readonly ILeptonicaApiSignatures leptonicaNativeApi;
+        private readonly IPixFactory pixFactory;
         private static readonly TraceSource trace = new("Tesseract");
         private Rect regionOfInterest;
 
         private bool runRecognitionPhase;
 
-        internal Page(TesseractEngine engine, Pix image, string imageName, Rect regionOfInterest, PageSegMode pageSegmentMode)
+        internal Page(
+            [NotNull] TesseractEngine engine, 
+            [NotNull] IManagedTesseractApi api, 
+            [NotNull] ITessApiSignatures nativeApi,
+            [NotNull] ILeptonicaApiSignatures leptonicaNativeApi,
+            [NotNull] IPixFactory pixFactory,
+            Pix image, string imageName, Rect regionOfInterest, PageSegMode pageSegmentMode)
         {
-            this.Engine = engine;
+            this.api = api ?? throw new ArgumentNullException(nameof(api));
+            this.nativeApi = nativeApi ?? throw new ArgumentNullException(nameof(nativeApi));
+            this.leptonicaNativeApi = leptonicaNativeApi ?? throw new ArgumentNullException(nameof(leptonicaNativeApi));
+            this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
+            this.Engine = engine ?? throw new ArgumentNullException(nameof(engine));
             this.Image = image;
             this.ImageName = imageName;
             this.RegionOfInterest = regionOfInterest;
@@ -53,6 +69,7 @@
         /// <summary>
         ///     The current region of interest being parsed.
         /// </summary>
+        [Obsolete("This property will be removed soon.")]
         public Rect RegionOfInterest
         {
             get => this.regionOfInterest;
@@ -66,7 +83,7 @@
                     this.regionOfInterest = value;
 
                     // update region of interest in image
-                    TessApi.Native.BaseApiSetRectangle(this.Engine.Handle, this.regionOfInterest.X1, this.regionOfInterest.Y1, this.regionOfInterest.Width, this.regionOfInterest.Height);
+                    this.nativeApi.BaseApiSetRectangle(this.Engine.Handle, this.regionOfInterest.X1, this.regionOfInterest.Y1, this.regionOfInterest.Width, this.regionOfInterest.Height);
 
                     // request rerun of recognition on the next call that requires recognition
                     this.runRecognitionPhase = false;
@@ -82,10 +99,10 @@
         {
             this.Recognize();
 
-            IntPtr pixHandle = TessApi.Native.BaseAPIGetThresholdedImage(this.Engine.Handle);
+            IntPtr pixHandle = this.nativeApi.BaseAPIGetThresholdedImage(this.Engine.Handle);
             if (pixHandle == IntPtr.Zero) throw new TesseractException("Failed to get thresholded image.");
 
-            return Pix.Create(pixHandle);
+            return this.pixFactory.Create(pixHandle);
         }
 
         /// <summary>
@@ -97,8 +114,8 @@
         {
             if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new ArgumentException("Cannot analyse image layout when using OSD only page segmentation, please use DetectBestOrientation instead.");
 
-            IntPtr resultIteratorHandle = TessApi.Native.BaseAPIAnalyseLayout(this.Engine.Handle);
-            return new PageIterator(this, resultIteratorHandle);
+            IntPtr resultIteratorHandle = this.nativeApi.BaseAPIAnalyseLayout(this.Engine.Handle);
+            return new PageIterator(this.nativeApi, this.pixFactory, this, resultIteratorHandle);
         }
 
         /// <summary>
@@ -109,18 +126,18 @@
         public ResultIterator GetIterator()
         {
             this.Recognize();
-            IntPtr resultIteratorHandle = TessApi.Native.BaseApiGetIterator(this.Engine.Handle);
-            return new ResultIterator(this, resultIteratorHandle);
+            IntPtr resultIteratorHandle = this.nativeApi.BaseApiGetIterator(this.Engine.Handle);
+            return new ResultIterator(this.api, this.nativeApi, this.pixFactory, this, resultIteratorHandle);
         }
 
         /// <summary>
         ///     Gets the page's content as plain text.
         /// </summary>
         /// <returns></returns>
-        public string GetText()
+        public string GetText(Rect regionOfInterest = default)
         {
             this.Recognize();
-            return TessApi.BaseAPIGetUTF8Text(this.Engine.Handle);
+            return this.api.BaseAPIGetUTF8Text(this.Engine.Handle);
         }
 
         /// <summary>
@@ -134,8 +151,8 @@
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
             if (useXHtml)
-                return TessApi.BaseAPIGetHOCRText2(this.Engine.Handle, pageNum);
-            return TessApi.BaseAPIGetHOCRText(this.Engine.Handle, pageNum);
+                return this.api.BaseAPIGetHOCRText2(this.Engine.Handle, pageNum);
+            return this.api.BaseAPIGetHOCRText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -147,7 +164,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return TessApi.BaseAPIGetAltoText(this.Engine.Handle, pageNum);
+            return this.api.BaseAPIGetAltoText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -159,7 +176,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return TessApi.BaseAPIGetTsvText(this.Engine.Handle, pageNum);
+            return this.api.BaseAPIGetTsvText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -171,7 +188,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return TessApi.BaseAPIGetBoxText(this.Engine.Handle, pageNum);
+            return this.api.BaseAPIGetBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -183,7 +200,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return TessApi.BaseAPIGetLSTMBoxText(this.Engine.Handle, pageNum);
+            return this.api.BaseAPIGetLSTMBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -195,7 +212,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return TessApi.BaseAPIGetWordStrBoxText(this.Engine.Handle, pageNum);
+            return this.api.BaseAPIGetWordStrBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -206,7 +223,7 @@
         public string GetUNLVText()
         {
             this.Recognize();
-            return TessApi.BaseAPIGetUNLVText(this.Engine.Handle);
+            return this.api.BaseAPIGetUNLVText(this.Engine.Handle);
         }
 
         /// <summary>
@@ -216,7 +233,7 @@
         public float GetMeanConfidence()
         {
             this.Recognize();
-            return TessApi.Native.BaseAPIMeanTextConf(this.Engine.Handle) / 100.0f;
+            return this.nativeApi.BaseAPIMeanTextConf(this.Engine.Handle) / 100.0f;
         }
 
         /// <summary>
@@ -226,22 +243,22 @@
         /// <returns></returns>
         public List<Rectangle> GetSegmentedRegions(PageIteratorLevel pageIteratorLevel)
         {
-            IntPtr boxArray = TessApi.Native.BaseAPIGetComponentImages(this.Engine.Handle, pageIteratorLevel, Constants.TRUE, IntPtr.Zero, IntPtr.Zero);
-            int boxCount = LeptonicaApi.Native.boxaGetCount(new HandleRef(this, boxArray));
+            IntPtr boxArray = this.nativeApi.BaseAPIGetComponentImages(this.Engine.Handle, pageIteratorLevel, Constants.TRUE, IntPtr.Zero, IntPtr.Zero);
+            int boxCount = this.leptonicaNativeApi.boxaGetCount(new HandleRef(this, boxArray));
 
             var boxList = new List<Rectangle>();
 
             for (var i = 0; i < boxCount; i++)
             {
-                IntPtr box = LeptonicaApi.Native.boxaGetBox(new HandleRef(this, boxArray), i, PixArrayAccessType.Clone);
+                IntPtr box = this.leptonicaNativeApi.boxaGetBox(new HandleRef(this, boxArray), i, PixArrayAccessType.Clone);
                 if (box == IntPtr.Zero) continue;
 
-                LeptonicaApi.Native.boxGetGeometry(new HandleRef(this, box), out int px, out int py, out int pw, out int ph);
+                this.leptonicaNativeApi.boxGetGeometry(new HandleRef(this, box), out int px, out int py, out int pw, out int ph);
                 boxList.Add(new Rectangle(px, py, pw, ph));
-                LeptonicaApi.Native.boxDestroy(ref box);
+                this.leptonicaNativeApi.boxDestroy(ref box);
             }
 
-            LeptonicaApi.Native.boxaDestroy(ref boxArray);
+            this.leptonicaNativeApi.boxaDestroy(ref boxArray);
 
             return boxList;
         }
@@ -313,7 +330,7 @@
             IntPtr script_nameHandle;
             float script_conf;
 
-            if (TessApi.Native.TessBaseAPIDetectOrientationScript(this.Engine.Handle, out orient_deg, out orient_conf, out script_nameHandle, out script_conf) != 0)
+            if (this.nativeApi.TessBaseAPIDetectOrientationScript(this.Engine.Handle, out orient_deg, out orient_conf, out script_nameHandle, out script_conf) != 0)
             {
                 orientation = orient_deg;
                 confidence = orient_conf;
@@ -335,13 +352,12 @@
             if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new InvalidOperationException("Cannot OCR image when using OSD only page segmentation, please use DetectBestOrientation instead.");
             if (!this.runRecognitionPhase)
             {
-                if (TessApi.Native.BaseApiRecognize(this.Engine.Handle, new HandleRef(this, IntPtr.Zero)) != 0) throw new InvalidOperationException("Recognition of image failed.");
+                if (this.nativeApi.BaseApiRecognize(this.Engine.Handle, new HandleRef(this, IntPtr.Zero)) != 0) throw new InvalidOperationException("Recognition of image failed.");
 
                 this.runRecognitionPhase = true;
 
                 // now write out the thresholded image if required to do so
-                bool tesseditWriteImages;
-                if (this.Engine.TryGetBoolVariable("tessedit_write_images", out tesseditWriteImages) && tesseditWriteImages)
+                if (this.Engine.TryGetBoolVariable("tessedit_write_images", out bool tesseditWriteImages) && tesseditWriteImages)
                 {
                     using Pix thresholdedImage = this.GetThresholdedImage();
                     string filePath = Path.Combine(Environment.CurrentDirectory, "tessinput.tif");
@@ -361,7 +377,7 @@
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) TessApi.Native.BaseAPIClear(this.Engine.Handle);
+            if (disposing) this.nativeApi.BaseAPIClear(this.Engine.Handle);
         }
     }
 }

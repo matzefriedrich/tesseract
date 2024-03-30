@@ -5,6 +5,8 @@
     using Interop;
     using Interop.Abstractions;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     using NUnit.Framework;
 
     [TestFixture]
@@ -13,26 +15,35 @@
         [TearDown]
         public void Dispose()
         {
-            if (this.engine != null)
-            {
-                this.engine.Dispose();
-                this.engine = null;
-            }
+            this.provider?.Dispose();
         }
 
         [SetUp]
         public void Init()
         {
-            if (!Directory.Exists(this.ResultsDirectory)) Directory.CreateDirectory(this.ResultsDirectory);
+            if (!Directory.Exists(this.ResultsDirectory))
+                Directory.CreateDirectory(this.ResultsDirectory);
 
-            this.engine = CreateEngine("osd");
+            this.services.AddTesseract();
+            this.provider = this.services.BuildServiceProvider();
+        }
+
+        private readonly ServiceCollection services = new();
+
+        private ITesseractEngine CreateEngine()
+        {
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
+            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath, "osd")
+                .Build();
+
+            return engineFactory(engineOptions);
         }
 
         private string ResultsDirectory => TestResultPath(@"Analysis/");
 
         private const string ExampleImagePath = @"Ocr/phototest.tif";
 
-        private TesseractEngine? engine;
+        private ServiceProvider? provider;
 
         [Test]
         [TestCase(null)]
@@ -40,13 +51,16 @@
         [TestCase(180f)]
         public void AnalyseLayout_RotatedImage(float? angle)
         {
+            // Arrange
             using Pix img = this.LoadTestImage(ExampleImagePath);
             using Pix rotatedImage = angle.HasValue ? img.Rotate(MathHelper.ToRadians(angle.Value)) : img.Clone();
             rotatedImage.Save(TestResultRunFile($@"AnalyseResult/AnalyseLayout_RotateImage_{angle}.png"));
 
-            TesseractEngine? tesseractEngine = this.engine;
-            if (tesseractEngine != null) tesseractEngine.DefaultPageSegMode = PageSegMode.AutoOsd;
-            using Page page = tesseractEngine?.Process(rotatedImage) ?? throw new ArgumentNullException("tesseractEngine?.Process(rotatedImage)");
+            using ITesseractEngine engine = this.CreateEngine();
+            if (engine != null) engine.DefaultPageSegMode = PageSegMode.AutoOsd;
+
+            // Act
+            using Page page = engine?.Process(rotatedImage) ?? throw new ArgumentNullException("tesseractEngine?.Process(rotatedImage)");
             using ResultIterator pageLayout = page.GetIterator();
             pageLayout.Begin();
             do
@@ -98,12 +112,15 @@
                 PageSegMode.SingleWord)]
             PageSegMode pageSegMode)
         {
+            using ITesseractEngine engine = this.CreateEngine();
+
             using Pix img = this.LoadTestImage(ExampleImagePath);
             using Pix rotatedPix = img.Rotate((float)Math.PI);
-            using Page page = this.engine?.Process(rotatedPix, pageSegMode) ?? throw new ArgumentNullException("this.engine?.Process(rotatedPix, pageSegMode)");
+            using Page page = engine.Process(rotatedPix, pageSegMode);
 
             page.DetectBestOrientationAndScript(out int orientation, out float _, out string scriptName, out float _);
 
+            // Assert
             Assert.That(orientation, Is.EqualTo(180));
             Assert.That(scriptName, Is.EqualTo("Latin"));
         }
@@ -115,12 +132,18 @@
         [TestCase(270)]
         public void DetectOrientation_Degrees_RotatedImage(int expectedOrientation)
         {
+            // Arrange
+            using ITesseractEngine engine = this.CreateEngine();
+
             using Pix img = this.LoadTestImage(ExampleImagePath);
             using Pix rotatedPix = img.Rotate((float)expectedOrientation / 360 * (float)Math.PI * 2);
-            using Page page = this.engine?.Process(rotatedPix, PageSegMode.OsdOnly) ?? throw new ArgumentNullException("this.engine?.Process(rotatedPix, PageSegMode.OsdOnly)");
+
+            // Act
+            using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
 
             page.DetectBestOrientationAndScript(out int orientation, out float _, out string scriptName, out float _);
 
+            // Assert
             Assert.That(orientation, Is.EqualTo(expectedOrientation));
             Assert.That(scriptName, Is.EqualTo("Latin"));
         }
@@ -132,11 +155,17 @@
         [TestCase(270)]
         public void DetectOrientation_Legacy_RotatedImage(int expectedOrientationDegrees)
         {
+            // Arrange
+            using ITesseractEngine engine = this.CreateEngine();
+
             using Pix img = this.LoadTestImage(ExampleImagePath);
             using Pix rotatedPix = img.Rotate((float)expectedOrientationDegrees / 360 * (float)Math.PI * 2);
-            using Page page = this.engine?.Process(rotatedPix, PageSegMode.OsdOnly) ?? throw new ArgumentNullException("this.engine?.Process(rotatedPix, PageSegMode.OsdOnly)");
+
+            // Act
+            using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
             page.DetectBestOrientation(out int orientation, out float _);
 
+            // Assert
             Assert.That(orientation, Is.EqualTo(expectedOrientationDegrees));
         }
 
@@ -146,11 +175,15 @@
             PageIteratorLevel level,
             [Values(0, 3)] int padding)
         {
+            // Arrange
+            using ITesseractEngine engine = this.CreateEngine();
+
             using Pix img = this.LoadTestImage(ExampleImagePath);
-            using Page? page = this.engine?.Process(img);
+            using Page? page = engine.Process(img);
             using ResultIterator pageLayout = page?.GetIterator() ?? throw new ArgumentNullException("page?.GetIterator()");
             pageLayout.Begin();
-            // get symbol
+
+            // Act
             using Pix elementImg = pageLayout.GetImage(level, padding, out int x, out int y);
             var elementImgFilename = $@"AnalyseResult/GetImage/ResultIterator_Image_{level}_{padding}_at_({x},{y}).png";
 
@@ -192,8 +225,9 @@
 
         private Pix LoadTestImage(string path)
         {
-            string fullExampleImagePath = TestFilePath(path);
-            return Pix.LoadFromFile(fullExampleImagePath);
+            var pixFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFactory>();
+            string fullExampleImagePath = MakeAbsoluteTestFilePath(path);
+            return pixFactory.LoadFromFile(fullExampleImagePath);
         }
     }
 }

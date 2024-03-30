@@ -1,10 +1,29 @@
 ﻿namespace Tesseract.Tests.Leptonica.PixTests
 {
+    using Abstractions;
+
+    using Microsoft.Extensions.DependencyInjection;
+
     using NUnit.Framework;
 
     [TestFixture]
     public unsafe class DataAccessTests
     {
+        [SetUp]
+        public void Init()
+        {
+            this.provider = this.services.AddTesseract().BuildServiceProvider();
+        }
+
+        [TearDown]
+        public void Teardown()
+        {
+            this.provider?.Dispose();
+        }
+
+        private readonly ServiceCollection services = new();
+        private ServiceProvider? provider;
+
         private const int Width = 59, Height = 53;
 
         [Test]
@@ -16,7 +35,12 @@
         [TestCase(32)]
         public void CanReadAndWriteData(int depth)
         {
-            using var pix = Pix.Create(Width, Height, depth);
+            // Arrange
+            var pixFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFactory>();
+
+            using Pix pix = pixFactory.Create(Width, Height, depth);
+
+            // Act
             PixData pixData = pix.GetData();
 
             for (var y = 0; y < Height; y++)
@@ -61,6 +85,7 @@
                         throw new NotSupportedException();
                     }
 
+                    // Assert
                     Assert.That(readVal, Is.EqualTo(val));
                 }
             }

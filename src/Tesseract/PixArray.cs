@@ -3,16 +3,21 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.IO;
     using System.Runtime.InteropServices;
 
-    using Interop;
+    using Abstractions;
+
+    using Interop.Abstractions;
+
+    using JetBrains.Annotations;
 
     /// <summary>
     ///     Represents an array of <see cref="Pix" />.
     /// </summary>
     public class PixArray : DisposableBase, IEnumerable<Pix>
     {
+        private readonly ILeptonicaApiSignatures leptonicaApi;
+        private readonly IPixFactory pixFactory;
         private readonly int version;
 
         /// <summary>
@@ -22,13 +27,16 @@
 
         private int count;
 
-        private PixArray(IntPtr handle)
+        internal PixArray([NotNull] ILeptonicaApiSignatures leptonicaApi, [NotNull] IPixFactory pixFactory, IntPtr handle)
         {
+            this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
+            this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
+
             this._handle = new HandleRef(this, handle);
             this.version = 1;
 
             // These will need to be updated whenever the PixA structure changes (i.e. a Pix is added or removed) though at the moment that isn't a problem.
-            this.count = LeptonicaApi.Native.pixaGetCount(this._handle);
+            this.count = this.leptonicaApi.pixaGetCount(this._handle);
         }
 
         /// <summary>
@@ -67,27 +75,6 @@
         }
 
         /// <summary>
-        ///     Loads the multi-page tiff located at <paramref name="filename" />.
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static PixArray LoadMultiPageTiffFromFile(string filename)
-        {
-            IntPtr pixaHandle = LeptonicaApi.Native.pixaReadMultipageTiff(filename);
-            if (pixaHandle == IntPtr.Zero) throw new IOException($"Failed to load image '{filename}'.");
-
-            return new PixArray(pixaHandle);
-        }
-
-        public static PixArray Create(int n)
-        {
-            IntPtr pixaHandle = LeptonicaApi.Native.pixaCreate(n);
-            if (pixaHandle == IntPtr.Zero) throw new IOException("Failed to create PixArray");
-
-            return new PixArray(pixaHandle);
-        }
-
-        /// <summary>
         ///     Add the specified pix to the end of the pix array.
         /// </summary>
         /// <remarks>
@@ -102,8 +89,8 @@
             ArgumentNullException.ThrowIfNull(pix);
             if (copyflag != PixArrayAccessType.Clone && copyflag != PixArrayAccessType.Copy) throw new ArgumentException($"Copy flag must be either copy or clone but was {copyflag}.");
 
-            int result = LeptonicaApi.Native.pixaAddPix(this._handle, pix.Handle, copyflag);
-            if (result == 0) this.count = LeptonicaApi.Native.pixaGetCount(this._handle);
+            int result = this.leptonicaApi.pixaAddPix(this._handle, pix.Handle, copyflag);
+            if (result == 0) this.count = this.leptonicaApi.pixaGetCount(this._handle);
             return result == 0;
         }
 
@@ -122,7 +109,9 @@
             if (index < 0 || index >= this.Count) throw new ArgumentOutOfRangeException(nameof(index), $"The index {index} must be between 0 and {this.Count}.");
 
             this.ThrowIfDisposed();
-            if (LeptonicaApi.Native.pixaRemovePix(this._handle, index) == 0) this.count = LeptonicaApi.Native.pixaGetCount(this._handle);
+
+            int d = this.leptonicaApi.pixaRemovePix(this._handle, index);
+            if (d == 0) this.count = this.leptonicaApi.pixaGetCount(this._handle);
         }
 
         /// <summary>
@@ -131,7 +120,7 @@
         public void Clear()
         {
             this.ThrowIfDisposed();
-            if (LeptonicaApi.Native.pixaClear(this._handle) == 0) this.count = LeptonicaApi.Native.pixaGetCount(this._handle);
+            if (this.leptonicaApi.pixaClear(this._handle) == 0) this.count = this.leptonicaApi.pixaGetCount(this._handle);
         }
 
         /// <summary>
@@ -151,15 +140,15 @@
 
             this.ThrowIfDisposed();
 
-            IntPtr pixHandle = LeptonicaApi.Native.pixaGetPix(this._handle, index, accessType);
+            IntPtr pixHandle = this.leptonicaApi.pixaGetPix(this._handle, index, accessType);
             if (pixHandle == IntPtr.Zero) throw new InvalidOperationException($"Failed to retrieve pix {pixHandle}.");
-            return Pix.Create(pixHandle);
+            return this.pixFactory.Create(pixHandle);
         }
 
         protected override void Dispose(bool disposing)
         {
             IntPtr handle = this._handle.Handle;
-            LeptonicaApi.Native.pixaDestroy(ref handle);
+            this.leptonicaApi.pixaDestroy(ref handle);
             this._handle = new HandleRef(this, handle);
         }
 

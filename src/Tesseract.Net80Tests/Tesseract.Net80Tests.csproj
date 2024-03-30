@@ -32,7 +32,12 @@
         <Compile Include="..\Tesseract.Tests\Leptonica\ConvertBitmapToPixTests.cs" Link="Leptonica\ConvertBitmapToPixTests.cs"/>
         <Compile Include="..\Tesseract.Tests\Leptonica\LeptonicaPerformanceTests.cs" Link="Leptonica\LeptonicaPerformanceTests.cs"/>
         <Compile Include="..\Tesseract.Tests\Leptonica\LoadFromFileTests.cs" Link="Leptonica\LoadFromFileTests.cs"/>
-        <Compile Include="..\Tesseract.Tests\Leptonica\PixATests.cs" Link="Leptonica\PixATests.cs"/>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixArrayFactoryTests.cs">
+          <Link>Leptonica\PixArrayFactoryTests.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixArrayTests.cs">
+          <Link>Leptonica\PixArrayTests.cs</Link>
+        </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageManipulationTests.cs" Link="Leptonica\PixTests\ImageManipulationTests.cs"/>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\PixDataAccessTests.cs" Link="Leptonica\PixTests\PixDataAccessTests.cs"/>
         <Compile Include="..\Tesseract.Tests\ResultIteratorTests\FontAttributesTests.cs" Link="ResultIteratorTests\FontAttributesTests.cs"/>
@@ -47,6 +52,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
         <PackageReference Include="Moq" Version="4.20.70" />
         <PackageReference Include="nunit" Version="3.13.3"/>
         <PackageReference Include="NUnit3TestAdapter" Version="4.3.0">

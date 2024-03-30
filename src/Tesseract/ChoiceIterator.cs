@@ -3,7 +3,11 @@
     using System;
     using System.Runtime.InteropServices;
 
-    using Interop;
+    using Abstractions;
+
+    using Interop.Abstractions;
+
+    using JetBrains.Annotations;
 
     /// <summary>
     ///     Class to iterate over the classifier choices for a single symbol.
@@ -11,9 +15,15 @@
     public sealed class ChoiceIterator : DisposableBase
     {
         private readonly HandleRef _handleRef;
+        private readonly IManagedTesseractApi api;
+        private readonly ITessApiSignatures nativeApi;
 
-        internal ChoiceIterator(IntPtr handle)
+        internal ChoiceIterator([NotNull] IManagedTesseractApi api, [NotNull] ITessApiSignatures nativeApi, IntPtr handle)
         {
+            // TODO: this component should not directly interact with the native API, otherwise it is an interop service and thus must be moved to the Interop assembly project
+
+            this.api = api ?? throw new ArgumentNullException(nameof(api));
+            this.nativeApi = nativeApi ?? throw new ArgumentNullException(nameof(nativeApi));
             this._handleRef = new HandleRef(this, handle);
         }
 
@@ -26,7 +36,7 @@
             this.ThrowIfDisposed();
             if (this._handleRef.Handle == IntPtr.Zero)
                 return false;
-            return TessApi.Native.ChoiceIteratorNext(this._handleRef) != 0;
+            return this.nativeApi.ChoiceIteratorNext(this._handleRef) != 0;
         }
 
         /// <summary>
@@ -42,7 +52,7 @@
             if (this._handleRef.Handle == IntPtr.Zero)
                 return 0f;
 
-            return TessApi.Native.ChoiceIteratorGetConfidence(this._handleRef);
+            return this.nativeApi.ChoiceIteratorGetConfidence(this._handleRef);
         }
 
         /// <summary>
@@ -55,12 +65,12 @@
             if (this._handleRef.Handle == IntPtr.Zero)
                 return string.Empty;
 
-            return TessApi.ChoiceIteratorGetUTF8Text(this._handleRef);
+            return this.api.ChoiceIteratorGetUTF8Text(this._handleRef);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (this._handleRef.Handle != IntPtr.Zero) TessApi.Native.ChoiceIteratorDelete(this._handleRef);
+            if (this._handleRef.Handle != IntPtr.Zero) this.nativeApi.ChoiceIteratorDelete(this._handleRef);
         }
     }
 }

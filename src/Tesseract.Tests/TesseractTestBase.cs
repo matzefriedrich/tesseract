@@ -1,7 +1,5 @@
 ﻿namespace Tesseract.Tests
 {
-    using Abstractions;
-
     using NUnit.Framework;
 
     public abstract class TesseractTestBase
@@ -13,20 +11,12 @@
 
         protected static string DataPath => AbsolutePath("tessdata");
 
-        protected static TesseractEngine CreateEngine(string lang = "eng", EngineMode mode = EngineMode.Default)
-        {
-            string datapath = DataPath;
-            return new TesseractEngine(datapath, lang, mode);
-        }
-
         protected static string AbsolutePath(string relativePath)
         {
             return Path.Combine(TestContext.CurrentContext.WorkDirectory, relativePath);
         }
 
-        #region File Helpers
-
-        protected static string TestFilePath(string path)
+        protected static string MakeAbsoluteTestFilePath(string path)
         {
             string basePath = AbsolutePath("Data");
 
@@ -58,13 +48,7 @@
 
             return Path.GetFullPath(Path.Combine(testRunDirectory, testFileName));
         }
-
-        protected static Pix LoadTestPix(string filename)
-        {
-            string testFilename = TestFilePath(filename);
-            return Pix.LoadFromFile(testFilename);
-        }
-
+        
         protected static void CheckResult(string resultFilename)
         {
             string actualResultFilename = TestResultRunFile(resultFilename);
@@ -72,7 +56,5 @@
 
             testDifferenceHandler.Execute(actualResultFilename, expectedResultFilename);
         }
-
-        #endregion File Helpers
     }
 }

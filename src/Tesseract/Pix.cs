@@ -7,10 +7,9 @@
 
     using Abstractions;
 
-    using Interop;
     using Interop.Abstractions;
 
-    public sealed unsafe class Pix : DisposableBase, IEquatable<Pix>
+    public sealed class Pix : DisposableBase, IEquatable<Pix>
     {
         public const float Deg2Rad = (float)(Math.PI / 180.0);
 
@@ -42,8 +41,6 @@
         /// </summary>
         public const string SEL_STR3 = "ooooooC  oo   oo   oooooo";
 
-        private static readonly List<int> AllowedDepths = new() { 1, 2, 4, 8, 16, 32 };
-
         /// <summary>
         ///     Used to lookup image formats by extension.
         /// </summary>
@@ -58,6 +55,8 @@
             { ".bmp", ImageFormat.Bmp }
         };
 
+        private readonly ILeptonicaApiSignatures leptonicaApi;
+
         private PixColormap colormap;
         private HandleRef handle;
 
@@ -67,18 +66,25 @@
         /// <remarks>
         ///     Note that the resulting instance takes ownership of the data structure.
         /// </remarks>
+        /// <param name="leptonicaApi">
+        ///     An <see cref="ILeptonicaApiSignatures" /> object that provides access to the native
+        ///     Leptonica API.
+        /// </param>
         /// <param name="handle"></param>
-        private Pix(IntPtr handle)
+        internal Pix(ILeptonicaApiSignatures leptonicaApi, IntPtr handle)
         {
             if (handle == IntPtr.Zero) throw new ArgumentNullException(nameof(handle));
+            this.leptonicaApi = leptonicaApi;
 
             this.handle = new HandleRef(this, handle);
-            this.Width = LeptonicaApi.Native.pixGetWidth(this.handle);
-            this.Height = LeptonicaApi.Native.pixGetHeight(this.handle);
-            this.Depth = LeptonicaApi.Native.pixGetDepth(this.handle);
 
-            IntPtr colorMapHandle = LeptonicaApi.Native.pixGetColormap(this.handle);
-            if (colorMapHandle != IntPtr.Zero) this.colormap = new PixColormap(colorMapHandle);
+            // TODO: this code should go into the PixFactory 
+            this.Width = this.leptonicaApi.pixGetWidth(this.handle);
+            this.Height = this.leptonicaApi.pixGetHeight(this.handle);
+            this.Depth = this.leptonicaApi.pixGetDepth(this.handle);
+
+            IntPtr colorMapHandle = this.leptonicaApi.pixGetColormap(this.handle);
+            if (colorMapHandle != IntPtr.Zero) this.colormap = new PixColormap(this.leptonicaApi, colorMapHandle);
         }
 
         public PixColormap Colormap
@@ -88,11 +94,11 @@
             {
                 if (value != null)
                 {
-                    if (LeptonicaApi.Native.pixSetColormap(this.handle, value.Handle) == 0) this.colormap = value;
+                    if (this.leptonicaApi.pixSetColormap(this.handle, value.Handle) == 0) this.colormap = value;
                 }
                 else
                 {
-                    if (LeptonicaApi.Native.pixDestroyColormap(this.handle) == 0) this.colormap = null;
+                    if (this.leptonicaApi.pixDestroyColormap(this.handle) == 0) this.colormap = null;
                 }
             }
         }
@@ -105,14 +111,14 @@
 
         public int XRes
         {
-            get => LeptonicaApi.Native.pixGetXRes(this.handle);
-            set => LeptonicaApi.Native.pixSetXRes(this.handle, value);
+            get => this.leptonicaApi.pixGetXRes(this.handle);
+            set => this.leptonicaApi.pixSetXRes(this.handle, value);
         }
 
         public int YRes
         {
-            get => LeptonicaApi.Native.pixGetYRes(this.handle);
-            set => LeptonicaApi.Native.pixSetYRes(this.handle, value);
+            get => this.leptonicaApi.pixGetYRes(this.handle);
+            set => this.leptonicaApi.pixSetYRes(this.handle, value);
         }
 
         internal HandleRef Handle => this.handle;
@@ -121,7 +127,10 @@
         {
             if (other == null) return false;
 
-            if (LeptonicaApi.Native.pixEqual(this.Handle, other.Handle, out int same) != 0) throw new TesseractException("Failed to compare pix");
+            int pixEqual = this.leptonicaApi.pixEqual(this.Handle, other.Handle, out int same);
+            if (pixEqual != 0)
+                throw new TesseractException("Failed to compare pix");
+
             return same != 0;
         }
 
@@ -152,7 +161,9 @@
                 actualFormat = format.Value;
             }
 
-            if (LeptonicaApi.Native.pixWrite(filename, this.handle, actualFormat) != 0) throw new IOException($"Failed to save image '{filename}'.");
+            int pixWrite = this.leptonicaApi.pixWrite(filename, this.handle, actualFormat);
+            if (pixWrite != 0)
+                throw new IOException($"Failed to save image '{filename}'.");
         }
 
         /// <summary>
@@ -174,8 +185,8 @@
         /// <returns>The pix with it's reference count incremented.</returns>
         public Pix Clone()
         {
-            IntPtr clonedHandle = LeptonicaApi.Native.pixClone(this.handle);
-            return new Pix(clonedHandle);
+            IntPtr clonedHandle = this.leptonicaApi.pixClone(this.handle);
+            return new Pix(this.leptonicaApi, clonedHandle);
         }
 
         /// <summary>
@@ -298,84 +309,23 @@
         /// </remarks>
         public Pix Scale(float scaleX, float scaleY)
         {
-            IntPtr result = LeptonicaApi.Native.pixScale(this.handle, scaleX, scaleY);
+            IntPtr result = this.leptonicaApi.pixScale(this.handle, scaleX, scaleY);
 
             if (result == IntPtr.Zero) throw new InvalidOperationException("Failed to scale pix.");
 
-            return new Pix(result);
+            return new Pix(this.leptonicaApi, result);
         }
 
         protected override void Dispose(bool disposing)
         {
             IntPtr tmpHandle = this.handle.Handle;
-            LeptonicaApi.Native.pixDestroy(ref tmpHandle);
+            this.leptonicaApi.pixDestroy(ref tmpHandle);
             this.handle = new HandleRef(this, IntPtr.Zero);
-        }
-
-        public static Pix Create(int width, int height, int depth)
-        {
-            if (!AllowedDepths.Contains(depth))
-                throw new ArgumentException("Depth must be 1, 2, 4, 8, 16, or 32 bits.", nameof(depth));
-
-            if (width <= 0) throw new ArgumentException("Width must be greater than zero", nameof(width));
-            if (height <= 0) throw new ArgumentException("Height must be greater than zero", nameof(height));
-
-            IntPtr handle = LeptonicaApi.Native.pixCreate(width, height, depth);
-            if (handle == IntPtr.Zero) throw new InvalidOperationException("Failed to create pix, this normally occurs because the requested image size is too large, please check Standard Error Output.");
-
-            return Create(handle);
-        }
-
-        public static Pix Create(IntPtr handle)
-        {
-            if (handle == IntPtr.Zero) throw new ArgumentException("Pix handle must not be zero (null).", "handle");
-
-            return new Pix(handle);
-        }
-
-        public static Pix LoadFromFile(string filename)
-        {
-            IntPtr pixHandle = LeptonicaApi.Native.pixRead(filename);
-            if (pixHandle == IntPtr.Zero) throw new IOException($"Failed to load image '{filename}'.");
-            return Create(pixHandle);
-        }
-
-        public static Pix LoadFromMemory(byte[] bytes)
-        {
-            IntPtr handle;
-            fixed (byte* ptr = bytes)
-            {
-                handle = LeptonicaApi.Native.pixReadMem(ptr, bytes.Length);
-            }
-
-            if (handle == IntPtr.Zero) throw new IOException("Failed to load image from memory.");
-            return Create(handle);
-        }
-
-        public static Pix LoadTiffFromMemory(byte[] bytes)
-        {
-            IntPtr handle;
-            fixed (byte* ptr = bytes)
-            {
-                handle = LeptonicaApi.Native.pixReadMemTiff(ptr, bytes.Length, 0);
-            }
-
-            if (handle == IntPtr.Zero) throw new IOException("Failed to load image from memory.");
-            return Create(handle);
-        }
-
-        public static Pix pixReadFromMultipageTiff(string filename, ref int offset)
-        {
-            IntPtr handle;
-            handle = LeptonicaApi.Native.pixReadFromMultipageTiff(filename, ref offset);
-
-            if (handle == IntPtr.Zero) throw new IOException($"Failed to load image from multi-page Tiff at offset {offset}.");
-            return Create(handle);
         }
 
         public PixData GetData()
         {
-            return new PixData(this);
+            return new PixData(this.leptonicaApi, this);
         }
 
         public override bool Equals(object obj)
@@ -402,15 +352,15 @@
             if (sx < 16) throw new ArgumentException("The sx parameter must be greater than or equal to 16", nameof(sx));
             if (sy < 16) throw new ArgumentException("The sy parameter must be greater than or equal to 16", nameof(sy));
 
-            int result = LeptonicaApi.Native.pixOtsuAdaptiveThreshold(this.handle, sx, sy, smoothx, smoothy, scorefract, out IntPtr ppixth, out IntPtr ppixd);
+            int result = this.leptonicaApi.pixOtsuAdaptiveThreshold(this.handle, sx, sy, smoothx, smoothy, scorefract, out IntPtr ppixth, out IntPtr ppixd);
 
             if (ppixth != IntPtr.Zero)
                 // free memory held by ppixth, an array of threshold values found for each tile
-                LeptonicaApi.Native.pixDestroy(ref ppixth);
+                this.leptonicaApi.pixDestroy(ref ppixth);
 
             if (result == 1) throw new TesseractException("Failed to binarize image.");
 
-            return new Pix(ppixd);
+            return new Pix(this.leptonicaApi, ppixd);
         }
 
         /// <summary>
@@ -464,20 +414,19 @@
             if (whsize >= maxWhSize) throw new ArgumentException($"The window half-width (whsize) must be less than {maxWhSize} for this image.", nameof(whsize));
             if (factor < 0) throw new ArgumentException("Factor must be greater than zero (0).", nameof(factor));
 
-            IntPtr ppixm, ppixsd, ppixth, ppixd;
-            int result = LeptonicaApi.Native.pixSauvolaBinarize(this.handle, whsize, factor, addborder ? 1 : 0, out ppixm, out ppixsd, out ppixth, out ppixd);
+            int result = this.leptonicaApi.pixSauvolaBinarize(this.handle, whsize, factor, addborder ? 1 : 0, out IntPtr ppixm, out IntPtr ppixsd, out IntPtr ppixth, out IntPtr ppixd);
 
             // Free memory held by other unused pix's
 
-            if (ppixm != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref ppixm);
+            if (ppixm != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref ppixm);
 
-            if (ppixsd != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref ppixsd);
+            if (ppixsd != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref ppixsd);
 
-            if (ppixth != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref ppixth);
+            if (ppixth != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref ppixth);
 
             if (result == 1) throw new TesseractException("Failed to binarize image.");
 
-            return new Pix(ppixd);
+            return new Pix(this.leptonicaApi, ppixd);
         }
 
         /// <summary>
@@ -511,14 +460,14 @@
             if (whsize >= maxWhSize) throw new ArgumentException($"The window half-width (whsize) must be less than {maxWhSize} for this image.", nameof(whsize));
             if (factor < 0) throw new ArgumentException("Factor must be greater than zero (0).");
 
-            int result = LeptonicaApi.Native.pixSauvolaBinarizeTiled(this.handle, whsize, factor, nx, ny, out IntPtr ppixth, out IntPtr ppixd);
+            int result = this.leptonicaApi.pixSauvolaBinarizeTiled(this.handle, whsize, factor, nx, ny, out IntPtr ppixth, out IntPtr ppixd);
 
             // Free memory held by other unused pix's
-            if (ppixth != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref ppixth);
+            if (ppixth != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref ppixth);
 
             if (result == 1) throw new TesseractException("Failed to binarize image.");
 
-            return new Pix(ppixd);
+            return new Pix(this.leptonicaApi, ppixd);
         }
 
         /// <summary>
@@ -536,9 +485,9 @@
             if (gwt < 0) throw new ArgumentException("All weights must be greater than or equal to zero; green was not.");
             if (bwt < 0) throw new ArgumentException("All weights must be greater than or equal to zero; blue was not.");
 
-            IntPtr resultPixHandle = LeptonicaApi.Native.pixConvertRGBToGray(this.handle, rwt, gwt, bwt);
+            IntPtr resultPixHandle = this.leptonicaApi.pixConvertRGBToGray(this.handle, rwt, gwt, bwt);
             if (resultPixHandle == IntPtr.Zero) throw new TesseractException("Failed to convert to grayscale.");
-            return new Pix(resultPixHandle);
+            return new Pix(this.leptonicaApi, resultPixHandle);
         }
 
         /// <summary>
@@ -557,60 +506,60 @@
             try
             {
                 /* threshold to binary, extracting much of the lines */
-                pix1 = LeptonicaApi.Native.pixThresholdToBinary(this.handle, 170);
+                pix1 = this.leptonicaApi.pixThresholdToBinary(this.handle, 170);
 
                 /* find the skew angle and deskew using an interpolated
                  * rotator for anti-aliasing (to avoid jaggies) */
-                LeptonicaApi.Native.pixFindSkew(new HandleRef(this, pix1), out angle, out conf);
-                pix2 = LeptonicaApi.Native.pixRotateAMGray(this.handle, Deg2Rad * angle, 255);
+                this.leptonicaApi.pixFindSkew(new HandleRef(this, pix1), out angle, out conf);
+                pix2 = this.leptonicaApi.pixRotateAMGray(this.handle, Deg2Rad * angle, 255);
 
                 /* extract the lines to be removed */
-                pix3 = LeptonicaApi.Native.pixCloseGray(new HandleRef(this, pix2), 51, 1);
+                pix3 = this.leptonicaApi.pixCloseGray(new HandleRef(this, pix2), 51, 1);
 
                 /* solidify the lines to be removed */
-                pix4 = LeptonicaApi.Native.pixErodeGray(new HandleRef(this, pix3), 1, 5);
+                pix4 = this.leptonicaApi.pixErodeGray(new HandleRef(this, pix3), 1, 5);
 
                 /* clean the background of those lines */
-                pix5 = LeptonicaApi.Native.pixThresholdToValue(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix4), 210, 255);
+                pix5 = this.leptonicaApi.pixThresholdToValue(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix4), 210, 255);
 
-                pix6 = LeptonicaApi.Native.pixThresholdToValue(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix5), 200, 0);
+                pix6 = this.leptonicaApi.pixThresholdToValue(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix5), 200, 0);
 
                 /* get paint-through mask for changed pixels */
-                pix7 = LeptonicaApi.Native.pixThresholdToBinary(new HandleRef(this, pix6), 210);
+                pix7 = this.leptonicaApi.pixThresholdToBinary(new HandleRef(this, pix6), 210);
 
                 /* add the inverted, cleaned lines to orig.  Because
                  * the background was cleaned, the inversion is 0,
                  * so when you add, it doesn't lighten those pixels.
                  * It only lightens (to white) the pixels in the lines! */
-                LeptonicaApi.Native.pixInvert(new HandleRef(this, pix6), new HandleRef(this, pix6));
-                pix8 = LeptonicaApi.Native.pixAddGray(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix2), new HandleRef(this, pix6));
+                this.leptonicaApi.pixInvert(new HandleRef(this, pix6), new HandleRef(this, pix6));
+                pix8 = this.leptonicaApi.pixAddGray(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix2), new HandleRef(this, pix6));
 
-                pix9 = LeptonicaApi.Native.pixOpenGray(new HandleRef(this, pix8), 1, 9);
+                pix9 = this.leptonicaApi.pixOpenGray(new HandleRef(this, pix8), 1, 9);
 
-                LeptonicaApi.Native.pixCombineMasked(new HandleRef(this, pix8), new HandleRef(this, pix9), new HandleRef(this, pix7));
+                this.leptonicaApi.pixCombineMasked(new HandleRef(this, pix8), new HandleRef(this, pix9), new HandleRef(this, pix7));
                 if (pix8 == IntPtr.Zero) throw new TesseractException("Failed to remove lines from image.");
 
-                return new Pix(pix8);
+                return new Pix(this.leptonicaApi, pix8);
             }
             finally
             {
                 // destroy any created intermediate pix's, regardless of if the process 
                 // failed for any reason.
-                if (pix1 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix1);
+                if (pix1 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix1);
 
-                if (pix2 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix2);
+                if (pix2 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix2);
 
-                if (pix3 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix3);
+                if (pix3 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix3);
 
-                if (pix4 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix4);
+                if (pix4 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix4);
 
-                if (pix5 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix5);
+                if (pix5 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix5);
 
-                if (pix6 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix6);
+                if (pix6 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix6);
 
-                if (pix7 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix7);
+                if (pix7 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix7);
 
-                if (pix9 != IntPtr.Zero) LeptonicaApi.Native.pixDestroy(ref pix9);
+                if (pix9 != IntPtr.Zero) this.leptonicaApi.pixDestroy(ref pix9);
             }
         }
 
@@ -624,38 +573,34 @@
         /// <returns></returns>
         public Pix Despeckle(string selStr, int selSize)
         {
-            IntPtr pix1, pix2, pix3;
-            IntPtr pix4, pix5, pix6;
-            IntPtr sel1, sel2;
-
             /*  Normalize for rapidly varying background */
-            pix1 = LeptonicaApi.Native.pixBackgroundNormFlex(this.handle, 7, 7, 1, 1, 10);
+            IntPtr pix1 = this.leptonicaApi.pixBackgroundNormFlex(this.handle, 7, 7, 1, 1, 10);
 
             /* Remove the background */
-            pix2 = LeptonicaApi.Native.pixGammaTRCMasked(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix1), new HandleRef(this, IntPtr.Zero), 1.0f, 100, 175);
+            IntPtr pix2 = this.leptonicaApi.pixGammaTRCMasked(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix1), new HandleRef(this, IntPtr.Zero), 1.0f, 100, 175);
 
             /* Binarize */
-            pix3 = LeptonicaApi.Native.pixThresholdToBinary(new HandleRef(this, pix2), 180);
+            IntPtr pix3 = this.leptonicaApi.pixThresholdToBinary(new HandleRef(this, pix2), 180);
 
             /* Remove the speckle noise up to selSize x selSize */
-            sel1 = LeptonicaApi.Native.selCreateFromString(selStr, selSize + 2, selSize + 2, "speckle" + selSize);
-            pix4 = LeptonicaApi.Native.pixHMT(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix3), new HandleRef(this, sel1));
-            sel2 = LeptonicaApi.Native.selCreateBrick(selSize, selSize, 0, 0, SelType.SEL_HIT);
-            pix5 = LeptonicaApi.Native.pixDilate(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix4), new HandleRef(this, sel2));
-            pix6 = LeptonicaApi.Native.pixSubtract(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix3), new HandleRef(this, pix5));
+            IntPtr sel1 = this.leptonicaApi.selCreateFromString(selStr, selSize + 2, selSize + 2, "speckle" + selSize);
+            IntPtr pix4 = this.leptonicaApi.pixHMT(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix3), new HandleRef(this, sel1));
+            IntPtr sel2 = this.leptonicaApi.selCreateBrick(selSize, selSize, 0, 0, SelType.SEL_HIT);
+            IntPtr pix5 = this.leptonicaApi.pixDilate(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix4), new HandleRef(this, sel2));
+            IntPtr pix6 = this.leptonicaApi.pixSubtract(new HandleRef(this, IntPtr.Zero), new HandleRef(this, pix3), new HandleRef(this, pix5));
 
-            LeptonicaApi.Native.selDestroy(ref sel1);
-            LeptonicaApi.Native.selDestroy(ref sel2);
+            this.leptonicaApi.selDestroy(ref sel1);
+            this.leptonicaApi.selDestroy(ref sel2);
 
-            LeptonicaApi.Native.pixDestroy(ref pix1);
-            LeptonicaApi.Native.pixDestroy(ref pix2);
-            LeptonicaApi.Native.pixDestroy(ref pix3);
-            LeptonicaApi.Native.pixDestroy(ref pix4);
-            LeptonicaApi.Native.pixDestroy(ref pix5);
+            this.leptonicaApi.pixDestroy(ref pix1);
+            this.leptonicaApi.pixDestroy(ref pix2);
+            this.leptonicaApi.pixDestroy(ref pix3);
+            this.leptonicaApi.pixDestroy(ref pix4);
+            this.leptonicaApi.pixDestroy(ref pix5);
 
             if (pix6 == IntPtr.Zero) throw new TesseractException("Failed to despeckle image.");
 
-            return new Pix(pix6);
+            return new Pix(this.leptonicaApi, pix6);
         }
 
         /// <summary>
@@ -722,10 +667,10 @@
         /// <returns>Returns deskewed image if confidence was high enough, otherwise returns clone of original pix.</returns>
         public Pix Deskew(ScewSweep sweep, int redSearch, int thresh, out Scew scew)
         {
-            IntPtr resultPixHandle = LeptonicaApi.Native.pixDeskewGeneral(this.handle, sweep.Reduction, sweep.Range, sweep.Delta, redSearch, thresh, out float pAngle, out float pConf);
+            IntPtr resultPixHandle = this.leptonicaApi.pixDeskewGeneral(this.handle, sweep.Reduction, sweep.Range, sweep.Delta, redSearch, thresh, out float pAngle, out float pConf);
             if (resultPixHandle == IntPtr.Zero) throw new TesseractException("Failed to deskew image.");
             scew = new Scew(pAngle, pConf);
-            return new Pix(resultPixHandle);
+            return new Pix(this.leptonicaApi, resultPixHandle);
         }
 
         /// <summary>
@@ -768,14 +713,14 @@
             double rotations = 2 * angleInRadians / Math.PI;
             if (Math.Abs(rotations - Math.Floor(rotations)) < VerySmallAngle)
                 // handle special case of orthoganal rotations (90, 180, 270)
-                resultHandle = LeptonicaApi.Native.pixRotateOrth(this.handle, (int)rotations);
+                resultHandle = this.leptonicaApi.pixRotateOrth(this.handle, (int)rotations);
             else
                 // handle general case
-                resultHandle = LeptonicaApi.Native.pixRotate(this.handle, angleInRadians, method, fillColor, width.Value, height.Value);
+                resultHandle = this.leptonicaApi.pixRotate(this.handle, angleInRadians, method, fillColor, width.Value, height.Value);
 
             if (resultHandle == IntPtr.Zero) throw new LeptonicaException("Failed to rotate image around its centre.");
 
-            return new Pix(resultHandle);
+            return new Pix(this.leptonicaApi, resultHandle);
         }
 
         /// <summary>
@@ -785,10 +730,10 @@
         /// <returns>rotated image</returns>
         public Pix Rotate90(int direction)
         {
-            IntPtr resultHandle = LeptonicaApi.Native.pixRotate90(this.handle, direction);
+            IntPtr resultHandle = this.leptonicaApi.pixRotate90(this.handle, direction);
 
             if (resultHandle == IntPtr.Zero) throw new LeptonicaException("Failed to rotate image.");
-            return new Pix(resultHandle);
+            return new Pix(this.leptonicaApi, resultHandle);
         }
 
         /// <summary>
@@ -797,10 +742,10 @@
         /// <returns></returns>
         public Pix Invert()
         {
-            IntPtr resultHandle = LeptonicaApi.Native.pixInvert(new HandleRef(this, IntPtr.Zero), this.handle);
+            IntPtr resultHandle = this.leptonicaApi.pixInvert(new HandleRef(this, IntPtr.Zero), this.handle);
 
             if (resultHandle == IntPtr.Zero) throw new LeptonicaException("Failed to invert image.");
-            return new Pix(resultHandle);
+            return new Pix(this.leptonicaApi, resultHandle);
         }
 
         /// <summary>
@@ -810,10 +755,10 @@
         /// <returns></returns>
         public Pix ConvertTo8(int cmapflag)
         {
-            IntPtr resultHandle = LeptonicaApi.Native.pixConvertTo8(this.handle, cmapflag);
+            IntPtr resultHandle = this.leptonicaApi.pixConvertTo8(this.handle, cmapflag);
 
             if (resultHandle == IntPtr.Zero) throw new LeptonicaException("Failed to convert image to 8 bpp.");
-            return new Pix(resultHandle);
+            return new Pix(this.leptonicaApi, resultHandle);
         }
     }
 }
