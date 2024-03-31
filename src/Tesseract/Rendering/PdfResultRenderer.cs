@@ -2,31 +2,34 @@
 {
     using System;
     using System.Runtime.InteropServices;
-
     using Interop.Abstractions;
+    using JetBrains.Annotations;
 
     public sealed class PdfResultRenderer : ResultRenderer
     {
-        private IntPtr _fontDirectoryHandle;
+        private readonly IntPtr fontDirectoryHandle;
 
-        public PdfResultRenderer(ITessApiSignatures native, string outputFilename, string fontDirectory, bool textonly) : base(native)
+        public PdfResultRenderer(ITessApiSignatures native, [NotNull] string outputFilename, [NotNull] string fontDirectory, bool isTextOnly) : base(native)
         {
-            IntPtr fontDirectoryHandle = Marshal.StringToHGlobalAnsi(fontDirectory);
-            IntPtr rendererHandle = native.PDFRendererCreate(outputFilename, fontDirectoryHandle, textonly ? 1 : 0);
+            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(outputFilename));
+            if (string.IsNullOrWhiteSpace(fontDirectory)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(fontDirectory));
 
-            this.Initialise(rendererHandle);
+            this.fontDirectoryHandle = Marshal.StringToHGlobalAnsi(fontDirectory);
+
+            int textOnly = isTextOnly ? 1 : 0;
+            IntPtr handle = native.PDFRendererCreate(outputFilename, this.fontDirectoryHandle, textOnly);
+            this.AssignHandle(handle);
         }
 
         protected override void Dispose(bool disposing)
         {
+            if (this.IsDisposed == false && disposing) this.FreeDirectoryHandle();
             base.Dispose(disposing);
+        }
 
-            // dispose of font
-            if (this._fontDirectoryHandle != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(this._fontDirectoryHandle);
-                this._fontDirectoryHandle = IntPtr.Zero;
-            }
+        private void FreeDirectoryHandle()
+        {
+            if (this.fontDirectoryHandle != IntPtr.Zero) Marshal.FreeHGlobal(this.fontDirectoryHandle);
         }
     }
 }

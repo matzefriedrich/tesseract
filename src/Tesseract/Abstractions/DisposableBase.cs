@@ -70,6 +70,9 @@
             if (this.IsDisposed) throw new ObjectDisposedException(this.ToString());
         }
 
-        protected abstract void Dispose(bool disposing);
+        protected virtual void Dispose(bool disposing)
+        {
+            
+        }
     }
 }

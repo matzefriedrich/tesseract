@@ -56,106 +56,82 @@
         public string? BaseAPIGetHOCRText(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetHOCRTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return htmlBeginTag + result + htmlEndTag;
-            }
+            if (txtHandle == IntPtr.Zero) return null;
 
-            return null;
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return htmlBeginTag + result + htmlEndTag;
         }
 
         //Just Copied:
         public string? BaseAPIGetHOCRText2(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetHOCRTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return xhtmlBeginTag + result + xhtmlEndTag;
-            }
+            if (txtHandle == IntPtr.Zero) return null;
 
-            return null;
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return xhtmlBeginTag + result + xhtmlEndTag;
         }
 
         public string? BaseAPIGetAltoText(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetAltoTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public string? BaseAPIGetTsvText(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetTsvTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public string? BaseAPIGetBoxText(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetBoxTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public string? BaseAPIGetLSTMBoxText(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetLSTMBoxTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public string? BaseAPIGetWordStrBoxText(HandleRef handle, int pageNum)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetWordStrBoxTextInternal(handle, pageNum);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public string? BaseAPIGetUNLVText(HandleRef handle)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetUNLVTextInternal(handle);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public string? BaseApiGetStringVariable(HandleRef handle, string name)
@@ -169,14 +145,11 @@
         public string? BaseAPIGetUTF8Text(HandleRef handle)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseAPIGetUTF8TextInternal(handle);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
-
-            return null;
+            if (txtHandle == IntPtr.Zero) return null;
+            
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         public int? BaseApiInit(HandleRef handle, string datapath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams)
@@ -194,12 +167,14 @@
             foreach (KeyValuePair<string, object> pair in initialValues)
             {
                 if (string.IsNullOrWhiteSpace(pair.Key)) throw new ArgumentException("Variable must have a name.");
-                if (pair.Value == null) throw new ArgumentException($"Variable '{pair.Key}': The type '{pair.Value?.GetType()}' is not supported.");
+
+                object? pairValue = pair.Value;
+                if (pairValue == null) throw new ArgumentException($"Variable '{pair.Key}': The type '{pairValue?.GetType()}' is not supported.");
                 varNames[i] = pair.Key;
-                if (TessConvert.TryToString(pair.Value, out string? varValue))
+                if (TessConvert.TryToString(pairValue, out string? varValue))
                     varValues[i] = varValue!;
                 else
-                    throw new ArgumentException($"Variable '{pair.Key}': The type '{pair.Value.GetType()}' is not supported.", "initialValues");
+                    throw new ArgumentException($"Variable '{pair.Key}': The type '{pairValue.GetType()}' is not supported.", nameof(initialValues));
                 i++;
             }
 
@@ -251,14 +226,11 @@
         public string? ResultIteratorGetUTF8Text(HandleRef handle, PageIteratorLevel level)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.ResultIteratorGetUTF8TextInternal(handle, level);
-            if (txtHandle != IntPtr.Zero)
-            {
-                string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
-                this.tesseractApiSignatures.DeleteText(txtHandle);
-                return result;
-            }
+            if (txtHandle == IntPtr.Zero) return null;
 
-            return null;
+            string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
+            this.tesseractApiSignatures.DeleteText(txtHandle);
+            return result;
         }
 
         /// <summary>

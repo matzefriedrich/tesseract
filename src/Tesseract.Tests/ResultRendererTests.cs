@@ -1,10 +1,14 @@
 ﻿namespace Tesseract.Tests
 {
+    using System.Reflection.Metadata;
     using Abstractions;
 
     using Microsoft.Extensions.DependencyInjection;
 
     using NUnit.Framework;
+    using Rendering;
+    using Rendering.Abstractions;
+    using Document = Rendering.Document;
 
     [TestFixture]
     public class ResultRendererTests : TesseractTestBase
@@ -38,7 +42,7 @@
             using (IResultRenderer renderer = rendererFactory.CreateTextRenderer(resultPath))
             {
                 string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -57,14 +61,14 @@
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
                 string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "pdf");
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
                 string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
-                this.ProcessImageFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessImageFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -85,7 +89,7 @@
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
                 // Act
-                this.ProcessImageFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessImageFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -102,15 +106,16 @@
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "pdf");
             string examplePixPath = MakeAbsoluteTestFilePath("processing/multi-page.tif");
 
+            
             // Act
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
-                this.ProcessMultipageTiff(renderer, examplePixPath);
+                this.ProcessMultipageTiff(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
-                this.ProcessImageFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessImageFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -131,7 +136,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
-                this.ProcessImageFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessImageFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -152,7 +157,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateHOcrRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -173,7 +178,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateUnlvRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -194,7 +199,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateAltoRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -215,7 +220,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateTsvRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -236,7 +241,7 @@
             // Arrange
             using (IResultRenderer renderer = rendererFactory.CreateLSTMBoxRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -257,7 +262,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateWordStrBoxRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -278,7 +283,7 @@
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateBoxRenderer(resultPath))
             {
-                this.ProcessFileActAssertHelper(renderer, examplePixPath);
+                this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
 
             // Assert
@@ -330,7 +335,7 @@
             IResultRenderer textRenderer = rendererFactory.CreateTextRenderer(resultPath);
 
             // Act
-            using (var renderer = new AggregateResultRenderer(pdfRenderer, textRenderer))
+            using (var renderer = new AggregateResultRenderer(new []{pdfRenderer, textRenderer}))
             {
                 this.ProcessMultipageTiff(renderer, examplePixPath);
             }
@@ -340,7 +345,7 @@
             Assert.That(File.Exists(expectedTxtOutputFilename), $"Expected a Text file \"{expectedTxtOutputFilename}\" to have been created; but none was found.");
         }
 
-        private void ProcessMultipageTiff(IResultRenderer renderer, string filename)
+        private void ProcessMultipageTiff(AggregateResultRenderer renderer, string filename)
         {
             // Arrange
             var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
@@ -354,25 +359,24 @@
 
             // Act
             int expectedPageNumber = -1;
-            using (renderer.BeginDocument(imageName))
+            using Rendering.Document document = renderer.BeginDocument(imageName);
+            
+            Assert.AreEqual(document.NumPages, expectedPageNumber);
+            foreach (Pix pix in pixA)
             {
-                Assert.AreEqual(renderer.PageNumber, expectedPageNumber);
-                foreach (Pix pix in pixA)
-                {
-                    using Page? page = engine.Process(pix, imageName);
-                    bool addedPage = renderer.AddPage(page);
-                    expectedPageNumber++;
+                using Page? page = engine.Process(pix, imageName);
+                bool addedPage = document.AddPage(page);
+                expectedPageNumber++;
 
-                    // Assert
-                    Assert.That(addedPage, Is.True);
-                    Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
-                }
+                // Assert
+                Assert.That(addedPage, Is.True);
+                Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
             }
-
-            Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
+                
+            Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
         }
 
-        private void ProcessFileActAssertHelper(IResultRenderer renderer, string filename)
+        private void ProcessFileActAssertHelper(AggregateResultRenderer renderer, string filename)
         {
             var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
@@ -382,20 +386,20 @@
 
             string imageName = Path.GetFileNameWithoutExtension(filename);
             using Pix pix = pixFactory.LoadFromFile(filename);
-            using (renderer.BeginDocument(imageName))
+            using (Document document = renderer.BeginDocument(imageName))
             {
-                Assert.AreEqual(renderer.PageNumber, -1);
+                Assert.AreEqual(document.NumPages, -1);
                 using Page? page = engine.Process(pix, imageName);
-                bool addedPage = renderer.AddPage(page);
+                bool addedPage = document.AddPage(page);
 
+                // Assert
                 Assert.That(addedPage, Is.True);
-                Assert.That(renderer.PageNumber, Is.EqualTo(0));
+                Assert.That(document.NumPages, Is.EqualTo(0));
+                Assert.AreEqual(document.NumPages, 0);
             }
-
-            Assert.AreEqual(renderer.PageNumber, 0);
         }
 
-        private void ProcessImageFileActAssertHelper(IResultRenderer renderer, string filename)
+        private void ProcessImageFileActAssertHelper(AggregateResultRenderer renderer, string filename)
         {
             var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
 
@@ -405,21 +409,22 @@
             string imageName = Path.GetFileNameWithoutExtension(filename);
             using PixArray pixA = this.ReadImageFileIntoPixArray(filename);
             int expectedPageNumber = -1;
-            using (renderer.BeginDocument(imageName))
+            using (Document document = renderer.BeginDocument(imageName))
             {
-                Assert.AreEqual(renderer.PageNumber, expectedPageNumber);
+                Assert.AreEqual(document.NumPages, expectedPageNumber);
                 foreach (Pix pix in pixA)
                 {
                     using Page? page = engine?.Process(pix, imageName);
-                    bool addedPage = renderer.AddPage(page);
+                    bool addedPage = document.AddPage(page);
                     expectedPageNumber++;
 
+                    // Assert
                     Assert.That(addedPage, Is.True);
-                    Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
+                    Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
                 }
-            }
 
-            Assert.That(renderer.PageNumber, Is.EqualTo(expectedPageNumber));
+                Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
+            }
         }
 
         private PixArray ReadImageFileIntoPixArray(string filename)

@@ -1,15 +1,16 @@
 ﻿namespace Tesseract.Rendering
 {
     using System;
-
     using Interop.Abstractions;
+    using JetBrains.Annotations;
 
     public sealed class LSTMBoxResultRenderer : ResultRenderer
     {
-        public LSTMBoxResultRenderer(ITessApiSignatures native, string outputFilename) : base(native)
+        public LSTMBoxResultRenderer(ITessApiSignatures native, [NotNull] string outputFilename) : base(native)
         {
-            IntPtr rendererHandle = native.LSTMBoxRendererCreate(outputFilename);
-            this.Initialise(rendererHandle);
+            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(outputFilename));
+            IntPtr handle = native.LSTMBoxRendererCreate(outputFilename);
+            this.AssignHandle(handle);
         }
     }
 }

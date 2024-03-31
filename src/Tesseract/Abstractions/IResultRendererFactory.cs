@@ -2,6 +2,8 @@
 {
     using System.Collections.Generic;
 
+    using Rendering.Abstractions;
+
     public interface IResultRendererFactory
     {
         /// <summary>

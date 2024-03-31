@@ -10,6 +10,7 @@
     using JetBrains.Annotations;
 
     using Rendering;
+    using Rendering.Abstractions;
 
     public sealed class ResultRendererFactory : IResultRendererFactory
     {
