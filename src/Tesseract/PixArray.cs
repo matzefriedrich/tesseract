@@ -82,14 +82,14 @@
         ///     it goes out of scope creating an access exception.
         /// </remarks>
         /// <param name="pix">The pix to add.</param>
-        /// <param name="copyflag">Determines if a clone or copy of the pix is inserted into the array.</param>
+        /// <param name="copyFlag">Determines if a clone or copy of the pix is inserted into the array.</param>
         /// <returns></returns>
-        public bool Add(Pix pix, PixArrayAccessType copyflag = PixArrayAccessType.Clone)
+        public bool Add(Pix pix, PixArrayAccessType copyFlag = PixArrayAccessType.Clone)
         {
             ArgumentNullException.ThrowIfNull(pix);
-            if (copyflag != PixArrayAccessType.Clone && copyflag != PixArrayAccessType.Copy) throw new ArgumentException($"Copy flag must be either copy or clone but was {copyflag}.");
+            if (copyFlag != PixArrayAccessType.Clone && copyFlag != PixArrayAccessType.Copy) throw new ArgumentException($"Copy flag must be either copy or clone but was {copyFlag}.");
 
-            int result = this.leptonicaApi.pixaAddPix(this._handle, pix.Handle, copyflag);
+            int result = this.leptonicaApi.pixaAddPix(this._handle, pix.Handle, copyFlag);
             if (result == 0) this.count = this.leptonicaApi.pixaGetCount(this._handle);
             return result == 0;
         }

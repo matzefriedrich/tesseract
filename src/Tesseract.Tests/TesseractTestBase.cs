@@ -56,5 +56,14 @@
 
             testDifferenceHandler.Execute(actualResultFilename, expectedResultFilename);
         }
+        
+        protected void AssertXDocumentsAreEqual(string resultFilename)
+        {
+            string actualResultFilename = this.TestResultRunFile(resultFilename);
+            string expectedResultFilename = TestResultPath(resultFilename);
+
+            var handler = new XDocumentDifferenceHandler();
+            handler.Execute(actualResultFilename, expectedResultFilename);
+        }
     }
 }

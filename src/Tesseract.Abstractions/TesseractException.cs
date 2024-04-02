@@ -1,9 +1,6 @@
 ﻿namespace Tesseract.Abstractions
 {
-    using System.Runtime.Serialization;
-
-    [Serializable]
-    public class TesseractException : Exception, ISerializable
+    public class TesseractException : Exception
     {
         public TesseractException()
         {

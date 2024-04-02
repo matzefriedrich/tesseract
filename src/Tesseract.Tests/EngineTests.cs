@@ -1,13 +1,9 @@
 ﻿namespace Tesseract.Tests
 {
     using System.Drawing;
-
     using Abstractions;
-
     using Interop;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]
@@ -338,7 +334,7 @@
             TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
 
             const string resultPath = "EngineTests/CanProcessPixUsingResultIterator.txt";
-            string actualResultPath = TestResultRunFile(resultPath);
+            string actualResultPath = this.TestResultRunFile(resultPath);
 
             using (ITesseractEngine engine = engineFactory(engineOptions))
             {
@@ -351,7 +347,7 @@
             }
 
             // Assert
-            CheckResult(resultPath);
+            this.CheckResult(resultPath);
         }
 
         // Test for [Issue #166](https://github.com/charlesw/tesseract/issues/166)
@@ -397,12 +393,11 @@
 
                 // Act
                 string hocrText = page.GetHOCRText(1, useXHtml);
-                string actualResult = TestUtils.NormaliseNewLine(hocrText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), hocrText);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.AssertXDocumentsAreEqual(resultFilename);
         }
 
         [Test]
@@ -424,11 +419,11 @@
                 // Act
                 string altoText = page.GetAltoText(1);
                 string actualResult = TestUtils.NormaliseNewLine(altoText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -450,11 +445,11 @@
                 // Act
                 string tsvText = page.GetTsvText(1);
                 string actualResult = TestUtils.NormaliseNewLine(tsvText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -475,11 +470,11 @@
                 // Act
                 string boxText = page.GetBoxText(1);
                 string actualResult = TestUtils.NormaliseNewLine(boxText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -501,11 +496,11 @@
                 // Act
                 string lstmBoxText = page.GetLSTMBoxText(1);
                 string actualResult = TestUtils.NormaliseNewLine(lstmBoxText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -527,11 +522,11 @@
                 // Act
                 string wordStrBoxText = page.GetWordStrBoxText(1);
                 string actualResult = TestUtils.NormaliseNewLine(wordStrBoxText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -553,11 +548,11 @@
                 // Act
                 string unlvText = page.GetUNLVText();
                 string actualResult = TestUtils.NormaliseNewLine(unlvText);
-                File.WriteAllText(TestResultRunFile(resultFilename), actualResult);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -578,11 +573,11 @@
 
                 // Act
                 string pageString = PageSerializer.Serialize(page, true);
-                File.WriteAllText(TestResultRunFile(resultFilename), pageString);
+                File.WriteAllText(this.TestResultRunFile(resultFilename), pageString);
             }
 
             // Assert
-            CheckResult(resultFilename);
+            this.CheckResult(resultFilename);
         }
 
         [Test]
@@ -841,7 +836,7 @@
             using ITesseractEngine engine = engineFactory(engineOptions);
 
             const string ResultFilename = @"EngineTests/CanPrintVariables.txt";
-            string actualResultsFilename = TestResultRunFile(ResultFilename);
+            string actualResultsFilename = this.TestResultRunFile(ResultFilename);
 
             // Act
             bool actual = engine.TryPrintVariablesToFile(actualResultsFilename);
@@ -850,7 +845,7 @@
             Assert.That(actual, Is.True);
 
             // Load the expected results and verify that they match
-            CheckResult(ResultFilename);
+            this.CheckResult(ResultFilename);
         }
     }
 }

@@ -73,7 +73,7 @@
         public string Version =>
             // Get version doesn't work for x64, might be compilation related for now just
             // return constant so we don't crash.
-            this.api.BaseApiGetVersion();
+            this.api.GetVersion();
 
         /// <summary>
         ///     Gets or sets default <see cref="PageSegMode" /> mode used by
@@ -155,7 +155,7 @@
 
         public bool SetDebugVariable(string name, string value)
         {
-            return this.api.BaseApiSetDebugVariable(this.handle, name, value) != 0;
+            return this.api.SetDebugVariable(this.handle, name, value) != 0;
         }
 
         /// <summary>
@@ -166,7 +166,7 @@
         /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
         public bool SetVariable(string name, string value)
         {
-            return this.api.BaseApiSetVariable(this.handle, name, value) != 0;
+            return this.api.SetVariable(this.handle, name, value) != 0;
         }
 
         /// <summary>
@@ -178,7 +178,7 @@
         public bool SetVariable(string name, bool value)
         {
             string strEncodedValue = value ? "TRUE" : "FALSE";
-            return this.api.BaseApiSetVariable(this.handle, name, strEncodedValue) != 0;
+            return this.api.SetVariable(this.handle, name, strEncodedValue) != 0;
         }
 
         /// <summary>
@@ -190,7 +190,7 @@
         public bool SetVariable(string name, int value)
         {
             var strEncodedValue = value.ToString("D", CultureInfo.InvariantCulture.NumberFormat);
-            return this.api.BaseApiSetVariable(this.handle, name, strEncodedValue) != 0;
+            return this.api.SetVariable(this.handle, name, strEncodedValue) != 0;
         }
 
         /// <summary>
@@ -202,7 +202,7 @@
         public bool SetVariable(string name, double value)
         {
             var strEncodedValue = value.ToString("R", CultureInfo.InvariantCulture.NumberFormat);
-            return this.api.BaseApiSetVariable(this.handle, name, strEncodedValue) != 0;
+            return this.api.SetVariable(this.handle, name, strEncodedValue) != 0;
         }
 
         /// <summary>
@@ -253,7 +253,7 @@
         /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
         public bool TryGetStringVariable(string name, out string value)
         {
-            value = this.api.BaseApiGetStringVariable(this.handle, name);
+            value = this.api.GetStringVariable(this.handle, name);
             return value != null;
         }
 
@@ -309,7 +309,8 @@
             IDictionary<string, object> initialOptions = this.options.InitialOptions;
             bool setOnlyNonDebugVariables = this.options.SetOnlyNonDebugVariables;
 
-            if (this.api.BaseApiInit(this.handle, dataPath, language, engineMode, configurationFiles, initialOptions, setOnlyNonDebugVariables) != 0)
+            int? result = this.api.Init(this.handle, dataPath, language, engineMode, configurationFiles, initialOptions, setOnlyNonDebugVariables);
+            if (result.HasValue && result.Value != 0)
             {
                 // Special case logic to handle cleaning up as init has already released the handle if it fails.
                 this.handle = new HandleRef(this, IntPtr.Zero);

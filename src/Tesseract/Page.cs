@@ -7,31 +7,28 @@
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Text;
-
     using Abstractions;
-
     using Interop;
     using Interop.Abstractions;
-
     using JetBrains.Annotations;
     using Microsoft.Extensions.Logging;
 
     public sealed class Page : DisposableBase
     {
+        private static readonly TraceSource trace = new("Tesseract");
         private readonly IManagedTesseractApi api;
-        private readonly ITessApiSignatures nativeApi;
         private readonly ILeptonicaApiSignatures leptonicaNativeApi;
+        private readonly ILogger<Page> logger;
+        private readonly ITessApiSignatures nativeApi;
         private readonly IPixFactory pixFactory;
         private readonly IPixFileWriter pixFileWriter;
-        private readonly ILogger<Page> logger;
-        private static readonly TraceSource trace = new("Tesseract");
         private Rect regionOfInterest;
 
         private bool runRecognitionPhase;
 
         internal Page(
-            [NotNull] TesseractEngine engine, 
-            [NotNull] IManagedTesseractApi api, 
+            [NotNull] TesseractEngine engine,
+            [NotNull] IManagedTesseractApi api,
             [NotNull] ITessApiSignatures nativeApi,
             [NotNull] ILeptonicaApiSignatures leptonicaNativeApi,
             [NotNull] IPixFactory pixFactory,
@@ -85,16 +82,14 @@
                 if (value.X1 < 0 || value.Y1 < 0 || value.X2 > this.Image.Width || value.Y2 > this.Image.Height)
                     throw new ArgumentException(Resources.Resources.Page_RegionOfInterest_The_region_of_interest_to_be_processed_must_be_within_the_image_bounds_, nameof(value));
 
-                if (this.regionOfInterest != value)
-                {
-                    this.regionOfInterest = value;
+                if (this.regionOfInterest == value) return;
+                this.regionOfInterest = value;
 
-                    // update region of interest in image
-                    this.nativeApi.BaseApiSetRectangle(this.Engine.Handle, this.regionOfInterest.X1, this.regionOfInterest.Y1, this.regionOfInterest.Width, this.regionOfInterest.Height);
+                // update region of interest in image
+                this.nativeApi.BaseApiSetRectangle(this.Engine.Handle, this.regionOfInterest.X1, this.regionOfInterest.Y1, this.regionOfInterest.Width, this.regionOfInterest.Height);
 
-                    // request rerun of recognition on the next call that requires recognition
-                    this.runRecognitionPhase = false;
-                }
+                // request rerun of recognition on the next call that requires recognition
+                this.runRecognitionPhase = false;
             }
         }
 
@@ -119,9 +114,10 @@
         /// <returns></returns>
         public PageIterator AnalyseLayout()
         {
-            if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new ArgumentException("Cannot analyse image layout when using OSD only page segmentation, please use DetectBestOrientation instead.");
+            if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new ArgumentException($"Cannot analyze image layout when using OSD only page segmentation, please use {nameof(DetectBestOrientation)} instead.");
 
-            IntPtr resultIteratorHandle = this.nativeApi.BaseAPIAnalyseLayout(this.Engine.Handle);
+            HandleRef engineHandle = this.Engine.Handle;
+            IntPtr resultIteratorHandle = this.nativeApi.BaseAPIAnalyseLayout(engineHandle);
             return new PageIterator(this.nativeApi, this.pixFactory, this, resultIteratorHandle);
         }
 
@@ -129,7 +125,7 @@
         ///     Creates a <see cref="ResultIterator" /> object that is used to iterate over the page as defined by the current
         ///     <see cref="Page.RegionOfInterest" />.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns a new <see cref="ResultIterator" /> object./returns>
         public ResultIterator GetIterator()
         {
             this.Recognize();
@@ -144,7 +140,8 @@
         public string GetText(Rect regionOfInterest = default)
         {
             this.Recognize();
-            return this.api.BaseAPIGetUTF8Text(this.Engine.Handle);
+            HandleRef engineHandle = this.Engine.Handle;
+            return this.api.GetUTF8Text(engineHandle);
         }
 
         /// <summary>
@@ -156,10 +153,12 @@
         public string GetHOCRText(int pageNum, bool useXHtml = false)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
-            this.Recognize();
             
+            this.Recognize();
+
             HandleRef engineHandle = this.Engine.Handle;
-            return useXHtml ? this.api.BaseAPIGetHOCRText2(engineHandle, pageNum) : this.api.BaseAPIGetHOCRText(engineHandle, pageNum);
+            HocrTextFormat textFormat = useXHtml ? HocrTextFormat.XHtml : HocrTextFormat.Html;
+            return this.api.GetHOCRText(engineHandle, pageNum, textFormat);
         }
 
         /// <summary>
@@ -171,7 +170,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.BaseAPIGetAltoText(this.Engine.Handle, pageNum);
+            return this.api.GetAltoText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -183,7 +182,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.BaseAPIGetTsvText(this.Engine.Handle, pageNum);
+            return this.api.GetTsvText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -195,7 +194,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.BaseAPIGetBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -207,7 +206,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.BaseAPIGetLSTMBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetLSTMBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -219,7 +218,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.BaseAPIGetWordStrBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetWordStrBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -230,7 +229,7 @@
         public string GetUNLVText()
         {
             this.Recognize();
-            return this.api.BaseAPIGetUNLVText(this.Engine.Handle);
+            return this.api.GetUNLVText(this.Engine.Handle);
         }
 
         /// <summary>
@@ -338,10 +337,9 @@
                 confidence = orient_conf;
                 if (script_nameHandle != IntPtr.Zero)
                     scriptName = MarshalHelper.PtrToString(script_nameHandle, Encoding.ASCII);
-                // Don't delete script_nameHandle as it points to internal memory managed by Tesseract.
                 else
                     scriptName = null;
-                
+
                 scriptConfidence = script_conf;
             }
             else
@@ -386,7 +384,7 @@
                 HandleRef engineHandle = this.Engine.Handle;
                 this.nativeApi.BaseAPIClear(engineHandle);
             }
-            
+
             base.Dispose(disposing);
         }
     }

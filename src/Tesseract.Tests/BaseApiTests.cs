@@ -20,7 +20,7 @@
             var sut = provider.GetRequiredService<IManagedTesseractApi>();
 
             // Act
-            string? version = sut.BaseApiGetVersion();
+            string? version = sut.GetVersion();
 
             // Assert
             Assert.That(version, Does.StartWith("5.0.0"));

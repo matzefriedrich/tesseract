@@ -4,20 +4,21 @@
 
     public interface IManagedTesseractApi
     {
-        int? BaseApiInit(HandleRef handle, string datapath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams);
-        int? BaseApiSetDebugVariable(HandleRef handle, string name, string value);
-        int? BaseApiSetVariable(HandleRef handle, string name, string value);
-        string? BaseAPIGetAltoText(HandleRef handle, int pageNum);
-        string? BaseAPIGetBoxText(HandleRef handle, int pageNum);
-        string? BaseAPIGetHOCRText(HandleRef handle, int pageNum);
-        string? BaseAPIGetHOCRText2(HandleRef handle, int pageNum);
-        string? BaseAPIGetLSTMBoxText(HandleRef handle, int pageNum);
-        string? BaseAPIGetTsvText(HandleRef handle, int pageNum);
-        string? BaseAPIGetUNLVText(HandleRef handle);
-        string? BaseAPIGetUTF8Text(HandleRef handle);
-        string? BaseAPIGetWordStrBoxText(HandleRef handle, int pageNum);
-        string? BaseApiGetStringVariable(HandleRef handle, string name);
-        string? BaseApiGetVersion();
+        int? Init(HandleRef handle, string dataPath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams);
+        int? SetDebugVariable(HandleRef handle, string name, string value);
+        int? SetVariable(HandleRef handle, string name, string value);
+        string? GetAltoText(HandleRef handle, int pageNum);
+        string? GetBoxText(HandleRef handle, int pageNum);
+        
+        string GetHOCRText(HandleRef handle, int pageNum, HocrTextFormat format);
+        
+        string? GetLSTMBoxText(HandleRef handle, int pageNum);
+        string? GetTsvText(HandleRef handle, int pageNum);
+        string? GetUNLVText(HandleRef handle);
+        string? GetUTF8Text(HandleRef handle);
+        string? GetWordStrBoxText(HandleRef handle, int pageNum);
+        string? GetStringVariable(HandleRef handle, string name);
+        string? GetVersion();
         string? ChoiceIteratorGetUTF8Text(HandleRef choiceIteratorHandle);
         string? ResultIteratorGetUTF8Text(HandleRef handle, PageIteratorLevel level);
         string? ResultIteratorWordRecognitionLanguage(HandleRef handle);
