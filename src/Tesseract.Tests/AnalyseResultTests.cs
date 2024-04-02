@@ -1,12 +1,10 @@
 ﻿namespace Tesseract.Tests
 {
     using Abstractions;
-
+    using ImageProcessing;
     using Interop;
     using Interop.Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]
@@ -52,9 +50,16 @@
         public void AnalyseLayout_RotatedImage(float? angle)
         {
             // Arrange
+            var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
+            var pixFileWriter = this.provider.GetRequiredService<IPixFileWriter>();
+            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+
+            var rotator = new ImageRotator(api, pixFactory);
+
             using Pix img = this.LoadTestImage(ExampleImagePath);
-            using Pix rotatedImage = angle.HasValue ? img.Rotate(MathHelper.ToRadians(angle.Value)) : img.Clone();
-            rotatedImage.Save(TestResultRunFile($@"AnalyseResult/AnalyseLayout_RotateImage_{angle}.png"));
+            using Pix rotatedImage = angle.HasValue ? rotator.RotateImage(img, MathHelper.ToRadians(angle.Value)) : pixFactory.Clone(img);
+            string filename = this.TestResultRunFile($@"AnalyseResult/AnalyseLayout_RotateImage_{angle}.png");
+            pixFileWriter.Save(rotatedImage, filename);
 
             using ITesseractEngine engine = this.CreateEngine();
             if (engine != null) engine.DefaultPageSegMode = PageSegMode.AutoOsd;
@@ -113,9 +118,12 @@
             PageSegMode pageSegMode)
         {
             using ITesseractEngine engine = this.CreateEngine();
+            var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
+            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var rotator = new ImageRotator(api, pixFactory);
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
-            using Pix rotatedPix = img.Rotate((float)Math.PI);
+            using Pix rotatedPix = rotator.RotateImage(img, (float)Math.PI);
             using Page page = engine.Process(rotatedPix, pageSegMode);
 
             page.DetectBestOrientationAndScript(out int orientation, out float _, out string scriptName, out float _);
@@ -134,9 +142,14 @@
         {
             // Arrange
             using ITesseractEngine engine = this.CreateEngine();
+            var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
+            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var rotator = new ImageRotator(api, pixFactory);
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
-            using Pix rotatedPix = img.Rotate((float)expectedOrientation / 360 * (float)Math.PI * 2);
+
+            float radAngle = (float)expectedOrientation / 360 * (float)Math.PI * 2;
+            using Pix rotatedPix = rotator.RotateImage(img, radAngle);
 
             // Act
             using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
@@ -157,9 +170,14 @@
         {
             // Arrange
             using ITesseractEngine engine = this.CreateEngine();
+            var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
+            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var rotator = new ImageRotator(api, pixFactory);
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
-            using Pix rotatedPix = img.Rotate((float)expectedOrientationDegrees / 360 * (float)Math.PI * 2);
+
+            float radAngle = (float)expectedOrientationDegrees / 360 * (float)Math.PI * 2;
+            using Pix rotatedPix = rotator.RotateImage(img, radAngle);
 
             // Act
             using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
@@ -176,6 +194,7 @@
             [Values(0, 3)] int padding)
         {
             // Arrange
+            var pixFileWriter = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFileWriter>();
             using ITesseractEngine engine = this.CreateEngine();
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
@@ -188,8 +207,8 @@
             var elementImgFilename = $@"AnalyseResult/GetImage/ResultIterator_Image_{level}_{padding}_at_({x},{y}).png";
 
             // TODO: Ensure generated pix is equal to expected pix, only saving it if it's not.
-            string destFilename = TestResultRunFile(elementImgFilename);
-            elementImg.Save(destFilename, ImageFormat.Png);
+            string destFilename = this.TestResultRunFile(elementImgFilename);
+            pixFileWriter.Save(elementImg, destFilename, ImageFormat.Png);
         }
 
         private void ExpectedOrientation(float rotation, out Orientation orientation, out float deskew)

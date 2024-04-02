@@ -38,8 +38,31 @@
         <Compile Include="..\Tesseract.Tests\Leptonica\PixArrayTests.cs">
           <Link>Leptonica\PixArrayTests.cs</Link>
         </Compile>
-        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageManipulationTests.cs" Link="Leptonica\PixTests\ImageManipulationTests.cs"/>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageBinarizerTest.cs">
+          <Link>Leptonica\PixTests\ImageBinarizerTest.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\SkewCorrectorTest.cs">
+          <Link>Leptonica\PixTests\SkewCorrectorTest.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\NoiseRemoverTest.cs">
+          <Link>Leptonica\PixTests\NoiseRemoverTest.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\GrayscaleConverterTest.cs">
+          <Link>Leptonica\PixTests\GrayscaleConverterTest.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\LineRemoverTest.cs">
+          <Link>Leptonica\PixTests\LineRemoverTest.cs</Link>
+        </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\PixDataAccessTests.cs" Link="Leptonica\PixTests\PixDataAccessTests.cs"/>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageRotatorTest.cs">
+          <Link>Leptonica\PixTests\ImageRotatorTest.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageScalerTest.cs">
+          <Link>Leptonica\PixTests\ImageScalerTest.cs</Link>
+        </Compile>
+        <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\TestResultExtensions.cs">
+          <Link>Leptonica\PixTests\TestResultExtensions.cs</Link>
+        </Compile>
         <Compile Include="..\Tesseract.Tests\ResultIteratorTests\FontAttributesTests.cs" Link="ResultIteratorTests\FontAttributesTests.cs"/>
         <Compile Include="..\Tesseract.Tests\ResultIteratorTests\OfAnEmptyPixTests.cs" Link="ResultIteratorTests\OfAnEmptyPixTests.cs"/>
         <Compile Include="..\Tesseract.Tests\PageSerializer.cs" Link="PageSerializer.cs"/>

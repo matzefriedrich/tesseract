@@ -40,7 +40,7 @@
             return testResultRunDirectory;
         }
 
-        protected static string TestResultRunFile(string path)
+        protected internal string TestResultRunFile(string path)
         {
             string? directoryName = Path.GetDirectoryName(path) ?? throw new ArgumentNullException("Path.GetDirectoryName(path)");
             string testRunDirectory = TestResultRunDirectory(directoryName);
@@ -48,10 +48,10 @@
 
             return Path.GetFullPath(Path.Combine(testRunDirectory, testFileName));
         }
-        
-        protected static void CheckResult(string resultFilename)
+
+        protected void CheckResult(string resultFilename)
         {
-            string actualResultFilename = TestResultRunFile(resultFilename);
+            string actualResultFilename = this.TestResultRunFile(resultFilename);
             string expectedResultFilename = TestResultPath(resultFilename);
 
             testDifferenceHandler.Execute(actualResultFilename, expectedResultFilename);

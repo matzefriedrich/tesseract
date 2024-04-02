@@ -3,11 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-
     using Abstractions;
-
     using Interop.Abstractions;
-
     using JetBrains.Annotations;
 
     public sealed unsafe class PixFactory : IPixFactory
@@ -78,6 +75,31 @@
 
             if (handle == IntPtr.Zero) throw new IOException($"Failed to load image from multi-page Tiff at offset {offset}.");
             return this.Create(handle);
+        }
+
+        /// <summary>
+        ///     Increments this pix's reference count and returns a reference to the same pix data.
+        /// </summary>
+        /// <remarks>
+        ///     A "clone" is simply a reference to an existing pix. It is implemented this way because
+        ///     image can be large and hence expensive to copy and extra handles need to be made with a simple
+        ///     policy to avoid double frees and memory leaks.
+        ///     The general usage protocol is:
+        ///     <list type="number">
+        ///         <item>Whenever you want a new reference to an existing <see cref="Pix" /> call <see cref="Pix.Clone" />.</item>
+        ///         <item>
+        ///             Always call <see cref="Pix.Dispose" /> on all references. This decrements the reference count and
+        ///             will destroy the pix when the reference count reaches zero.
+        ///         </item>
+        ///     </list>
+        /// </remarks>
+        /// <returns>The pix with it's reference count incremented.</returns>
+        public Pix Clone([NotNull] Pix source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            IntPtr clonedHandle = this.leptonicaApi.pixClone(source.Handle);
+            return new Pix(this.leptonicaApi, clonedHandle);
         }
     }
 }

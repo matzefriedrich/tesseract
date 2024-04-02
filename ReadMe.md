@@ -29,7 +29,7 @@ eliminate. Besides that, the evolvability and stability of the codebase do not m
 
 **Aligning the wrapper API with SOTA architectural concepts as found in the .NET space**, for instance:
 
-* Consistent usage of DI; the goal is to bring hidden dependencies to the surface and turn singleton implementations into service configurations with a singleton lifetime behavior (reduces static cling and boots idempotency).
+* Consistent usage of DI; the goal is to bring hidden dependencies to the surface and turn singleton implementations into service configurations with a singleton lifetime behavior (reduces static cling and boosts idempotency).
 * Adoption of the module system introduced by .NET Core (improved separation of concerns, reliable abstractions, interfaces, and primitive types)
 * Changing stateful types into stateless types (some classes need to perform probable erroneous state-checks on objects whose type implements the `IDisposable` interface)
 * Adoption of performance benchmarks (no more performance measurements in unit tests)

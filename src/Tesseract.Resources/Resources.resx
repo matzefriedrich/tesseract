@@ -18,4 +18,10 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="Value_cannot_be_null_or_whitespace" xml:space="preserve">
+        <value>Value cannot be null or whitespace.</value>
+    </data>
+    <data name="Page_RegionOfInterest_The_region_of_interest_to_be_processed_must_be_within_the_image_bounds_" xml:space="preserve">
+        <value>The region of interest to be processed must be within the image bounds.</value>
+    </data>
 </root>

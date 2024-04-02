@@ -14,6 +14,7 @@
     using Interop.Abstractions;
 
     using JetBrains.Annotations;
+    using Microsoft.Extensions.Logging;
 
     public sealed class Page : DisposableBase
     {
@@ -21,6 +22,8 @@
         private readonly ITessApiSignatures nativeApi;
         private readonly ILeptonicaApiSignatures leptonicaNativeApi;
         private readonly IPixFactory pixFactory;
+        private readonly IPixFileWriter pixFileWriter;
+        private readonly ILogger<Page> logger;
         private static readonly TraceSource trace = new("Tesseract");
         private Rect regionOfInterest;
 
@@ -32,12 +35,16 @@
             [NotNull] ITessApiSignatures nativeApi,
             [NotNull] ILeptonicaApiSignatures leptonicaNativeApi,
             [NotNull] IPixFactory pixFactory,
+            [NotNull] IPixFileWriter pixFileWriter,
+            [NotNull] ILogger<Page> logger,
             Pix image, string imageName, Rect regionOfInterest, PageSegMode pageSegmentMode)
         {
             this.api = api ?? throw new ArgumentNullException(nameof(api));
             this.nativeApi = nativeApi ?? throw new ArgumentNullException(nameof(nativeApi));
             this.leptonicaNativeApi = leptonicaNativeApi ?? throw new ArgumentNullException(nameof(leptonicaNativeApi));
             this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
+            this.pixFileWriter = pixFileWriter ?? throw new ArgumentNullException(nameof(pixFileWriter));
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.Engine = engine ?? throw new ArgumentNullException(nameof(engine));
             this.Image = image;
             this.ImageName = imageName;
@@ -76,7 +83,7 @@
             set
             {
                 if (value.X1 < 0 || value.Y1 < 0 || value.X2 > this.Image.Width || value.Y2 > this.Image.Height)
-                    throw new ArgumentException("The region of interest to be processed must be within the image bounds.", "value");
+                    throw new ArgumentException(Resources.Resources.Page_RegionOfInterest_The_region_of_interest_to_be_processed_must_be_within_the_image_bounds_, nameof(value));
 
                 if (this.regionOfInterest != value)
                 {
@@ -150,9 +157,9 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            if (useXHtml)
-                return this.api.BaseAPIGetHOCRText2(this.Engine.Handle, pageNum);
-            return this.api.BaseAPIGetHOCRText(this.Engine.Handle, pageNum);
+            
+            HandleRef engineHandle = this.Engine.Handle;
+            return useXHtml ? this.api.BaseAPIGetHOCRText2(engineHandle, pageNum) : this.api.BaseAPIGetHOCRText(engineHandle, pageNum);
         }
 
         /// <summary>
@@ -279,17 +286,16 @@
             this.DetectBestOrientation(out int orientationDegrees, out float orientationConfidence);
 
             // convert angle to 0-360 (shouldn't be required but do it just o be safe).
-            orientationDegrees = orientationDegrees % 360;
+            orientationDegrees %= 360;
             if (orientationDegrees < 0) orientationDegrees += 360;
 
-            if (orientationDegrees > 315 || orientationDegrees <= 45)
-                orientation = Orientation.PageUp;
-            else if (orientationDegrees > 45 && orientationDegrees <= 135)
-                orientation = Orientation.PageRight;
-            else if (orientationDegrees > 135 && orientationDegrees <= 225)
-                orientation = Orientation.PageDown;
-            else
-                orientation = Orientation.PageLeft;
+            orientation = orientationDegrees switch
+            {
+                > 315 or <= 45 => Orientation.PageUp,
+                > 45 and <= 135 => Orientation.PageRight,
+                > 135 and <= 225 => Orientation.PageDown,
+                _ => Orientation.PageLeft
+            };
 
             confidence = orientationConfidence;
         }
@@ -325,12 +331,8 @@
         ///         <param name="scriptConfidence">The confidence level in the script</param>
         public void DetectBestOrientationAndScript(out int orientation, out float confidence, out string scriptName, out float scriptConfidence)
         {
-            int orient_deg;
-            float orient_conf;
-            IntPtr script_nameHandle;
-            float script_conf;
-
-            if (this.nativeApi.TessBaseAPIDetectOrientationScript(this.Engine.Handle, out orient_deg, out orient_conf, out script_nameHandle, out script_conf) != 0)
+            HandleRef engineHandle = this.Engine.Handle;
+            if (this.nativeApi.TessBaseAPIDetectOrientationScript(engineHandle, out int orient_deg, out float orient_conf, out IntPtr script_nameHandle, out float script_conf) != 0)
             {
                 orientation = orient_deg;
                 confidence = orient_conf;
@@ -339,6 +341,7 @@
                 // Don't delete script_nameHandle as it points to internal memory managed by Tesseract.
                 else
                     scriptName = null;
+                
                 scriptConfidence = script_conf;
             }
             else
@@ -349,7 +352,7 @@
 
         internal void Recognize()
         {
-            if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new InvalidOperationException("Cannot OCR image when using OSD only page segmentation, please use DetectBestOrientation instead.");
+            if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new InvalidOperationException($"Cannot OCR image when using OSD only page segmentation, please use {nameof(DetectBestOrientation)} instead.");
             if (!this.runRecognitionPhase)
             {
                 if (this.nativeApi.BaseApiRecognize(this.Engine.Handle, new HandleRef(this, IntPtr.Zero)) != 0) throw new InvalidOperationException("Recognition of image failed.");
@@ -364,11 +367,12 @@
                     try
                     {
                         const ImageFormat imageFormat = ImageFormat.TiffG4;
-                        thresholdedImage.Save(filePath, imageFormat);
+                        this.pixFileWriter.Save(thresholdedImage, filePath, imageFormat);
                         trace.TraceEvent(TraceEventType.Information, 2, "Successfully saved the thresholded image to '{0}'", filePath);
                     }
                     catch (Exception error)
                     {
+                        this.logger.LogError(error, $"Failed to save the thresholded image to {filePath} due to an unhandled error.");
                         trace.TraceEvent(TraceEventType.Error, 2, "Failed to save the thresholded image to '{0}'.\nError: {1}", filePath, error.Message);
                     }
                 }
@@ -377,7 +381,13 @@
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) this.nativeApi.BaseAPIClear(this.Engine.Handle);
+            if (this.IsDisposed == false && disposing)
+            {
+                HandleRef engineHandle = this.Engine.Handle;
+                this.nativeApi.BaseAPIClear(engineHandle);
+            }
+            
+            base.Dispose(disposing);
         }
     }
 }

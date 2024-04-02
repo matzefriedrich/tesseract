@@ -28,6 +28,7 @@
             services.AddTransient<IPixToBitmapConverter, PixToBitmapConverter>();
             services.AddTransient<IBitmapToPixConverter, BitmapToPixConverter>();
             services.AddTransient<IPixConverter, PixConverter>();
+            services.AddTransient<IPixFileWriter, PixFileWriter>();
 
             services.AddTransient<IResultRendererFactory, ResultRendererFactory>();
             services.AddTransient<TesseractEngineFactory>(provider =>
@@ -38,7 +39,8 @@
                     var native = provider.GetRequiredService<ITessApiSignatures>();
                     var leptonicaNativeApi = provider.GetRequiredService<ILeptonicaApiSignatures>();
                     var pixFactory = provider.GetRequiredService<IPixFactory>();
-                    return new TesseractEngine(api, native, leptonicaNativeApi, pixFactory, options);
+                    var pixFileWriter = provider.GetRequiredService<IPixFileWriter>();
+                    return new TesseractEngine(api, native, leptonicaNativeApi, pixFactory, pixFileWriter, options);
 
                 };
             });

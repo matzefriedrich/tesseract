@@ -6,14 +6,11 @@
     using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Security;
-
     using Abstractions;
-
     using Internal;
-
     using Interop.Abstractions;
-
     using JetBrains.Annotations;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     /// <summary>
     ///     The tesseract OCR engine.
@@ -26,6 +23,7 @@
         private readonly ITessApiSignatures native;
         private readonly TesseractEngineOptions options;
         private readonly IPixFactory pixFactory;
+        private readonly IPixFileWriter pixFileWriter;
 
         private HandleRef handle;
 
@@ -54,12 +52,14 @@
             [NotNull] ITessApiSignatures native,
             [NotNull] ILeptonicaApiSignatures leptonicaNativeApi,
             [NotNull] IPixFactory pixFactory,
+            [NotNull] IPixFileWriter pixFileWriter,
             TesseractEngineOptions options)
         {
             this.api = api ?? throw new ArgumentNullException(nameof(api));
             this.native = native ?? throw new ArgumentNullException(nameof(native));
             this.leptonicaNativeApi = leptonicaNativeApi ?? throw new ArgumentNullException(nameof(leptonicaNativeApi));
             this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
+            this.pixFileWriter = pixFileWriter ?? throw new ArgumentNullException(nameof(pixFileWriter));
             this.options = options;
 
             this.DefaultPageSegMode = PageSegMode.Auto;
@@ -147,7 +147,8 @@
             this.native.BaseAPISetPageSegMode(this.handle, actualPageSegmentMode);
             this.native.BaseApiSetImage(this.handle, image.Handle);
             if (!string.IsNullOrEmpty(inputName)) this.native.BaseApiSetInputName(this.handle, inputName);
-            var page = new Page(this, this.api, this.native, this.leptonicaNativeApi, this.pixFactory, image, inputName, region, actualPageSegmentMode);
+            // TODO: do not create Page instance here; move this code into a factory (because of the dependencies which are owned by the current engine object)
+            var page = new Page(this, this.api, this.native, this.leptonicaNativeApi, this.pixFactory, this.pixFileWriter, new NullLogger<Page>(), image, inputName, region, actualPageSegmentMode);
             page.Disposed += this.OnIteratorDisposed;
             return page;
         }

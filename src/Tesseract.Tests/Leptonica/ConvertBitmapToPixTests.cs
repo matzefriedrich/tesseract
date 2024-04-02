@@ -2,13 +2,9 @@
 {
     using System.Drawing;
     using System.Drawing.Imaging;
-
     using Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
-
     using ImageFormat = Interop.Abstractions.ImageFormat;
 
     public class ConvertBitmapToPixTests : TesseractTestBase
@@ -36,6 +32,7 @@
         {
             // Arrange
             var sut = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IBitmapToPixConverter>();
+            var writer = this.provider.GetRequiredService<IPixFileWriter>();
 
             string sourceFilePath = MakeAbsoluteTestFilePath("Conversion/photo_rgb_32bpp.tif");
 
@@ -44,7 +41,7 @@
 
             // Act
             using Pix dest = sut.Convert(scaledSource);
-            dest.Save(TestResultRunFile("Conversion/ScaledBitmapToPix_rgb_32bpp.tif"), ImageFormat.Tiff);
+            writer.Save(dest, this.TestResultRunFile("Conversion/ScaledBitmapToPix_rgb_32bpp.tif"), ImageFormat.Tiff);
 
             // Assert
             Assert.That(scaledSource.GetBPP(), Is.EqualTo(32));
@@ -61,6 +58,7 @@
         {
             // Arrange
             var sut = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IBitmapToPixConverter>();
+            var writer = this.provider.GetRequiredService<IPixFileWriter>();
 
             int depth = Image.GetPixelFormatSize(pixelFormat);
 
@@ -77,7 +75,7 @@
             // Act
             using Pix dest = sut.Convert(source);
             var destFilename = $"Conversion/BitmapToPix_{pixType}_{depth}bpp.tif";
-            dest.Save(TestResultRunFile(destFilename), ImageFormat.Tiff);
+            writer.Save(dest, this.TestResultRunFile(destFilename), ImageFormat.Tiff);
 
             // Assert
             Assert.That(source.PixelFormat, Is.EqualTo(pixelFormat));
@@ -93,14 +91,15 @@
         {
             // Arrange
             var sut = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IBitmapToPixConverter>();
-            
+            var pixFileWriter = this.provider.GetRequiredService<IPixFileWriter>();
+
             string sourceFile = MakeAbsoluteTestFilePath("Conversion/photo_palette_8bpp.png");
             using var source = new Bitmap(sourceFile);
-            
+
             // Act
             using Pix dest = sut.Convert(source);
-            string destFilename = TestResultRunFile("Conversion/BitmapToPix_palette_8bpp.png");
-            dest.Save(destFilename, ImageFormat.Png);
+            string destFilename = this.TestResultRunFile("Conversion/BitmapToPix_palette_8bpp.png");
+            pixFileWriter.Save(dest, destFilename, ImageFormat.Png);
 
             // Assert
             Assert.That(source.GetBPP(), Is.EqualTo(8));
@@ -121,7 +120,7 @@
         {
             // Arrange
             var pixFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFactory>();
-            
+
             bool hasPalette = depth < 16 && !isGrayscale;
 
             string pixType;
@@ -132,10 +131,10 @@
             string sourceFile = MakeAbsoluteTestFilePath($"Conversion/photo_{pixType}_{depth}bpp.tif");
             var converter = new PixToBitmapConverter();
             using Pix source = pixFactory.LoadFromFile(sourceFile);
-            
+
             // Act
             using Bitmap dest = converter.Convert(source, includeAlpha);
-            string destFilename = TestResultRunFile($"Conversion/PixToBitmap_{pixType}_{depth}bpp.tif");
+            string destFilename = this.TestResultRunFile($"Conversion/PixToBitmap_{pixType}_{depth}bpp.tif");
             dest.Save(destFilename, System.Drawing.Imaging.ImageFormat.Tiff);
 
             // Assert

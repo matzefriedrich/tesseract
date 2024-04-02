@@ -10,5 +10,6 @@
         unsafe Pix LoadFromMemory(byte[] bytes);
         unsafe Pix LoadTiffFromMemory(byte[] bytes);
         Pix pixReadFromMultipageTiff(string filename, ref int offset);
+        Pix Clone(Pix source);
     }
 }
