@@ -13,7 +13,7 @@
         [SetUp]
         public void Init()
         {
-            this.services.AddTesseract();
+            this.services.AddTesseract(new EngineOptionDefaults(DataPath));
 
             this.provider = this.services.BuildServiceProvider();
         }
@@ -345,10 +345,7 @@
         private void ProcessMultipageTiff(AggregateResultRenderer renderer, string filename)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
             var pixArrayFactory = this.provider.GetRequiredService<IPixArrayFactory>();
 
             string imageName = Path.GetFileNameWithoutExtension(filename);
@@ -361,7 +358,7 @@
             Assert.AreEqual(document.NumPages, expectedPageNumber);
             foreach (Pix pix in pixA)
             {
-                using Page? page = engine.Process(pix, imageName);
+                using Page? page = pageFactory.CreatePage(pix, builder => builder.WithInputName(imageName));
                 bool addedPage = document.AddPage(page);
                 expectedPageNumber++;
 
@@ -375,34 +372,27 @@
 
         private void ProcessFileActAssertHelper(AggregateResultRenderer renderer, string filename)
         {
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string imageName = Path.GetFileNameWithoutExtension(filename);
             using Pix pix = pixFactory.LoadFromFile(filename);
-            using (Document document = renderer.BeginDocument(imageName))
-            {
-                Assert.AreEqual(document.NumPages, -1);
-                using Page? page = engine.Process(pix, imageName);
-                bool addedPage = document.AddPage(page);
+            using Document document = renderer.BeginDocument(imageName);
+            Assert.AreEqual(document.NumPages, -1);
+            
+            using Page page = pageFactory.CreatePage(pix, builder => builder.WithInputName(imageName));
+            bool addedPage = document.AddPage(page);
 
-                // Assert
-                Assert.That(addedPage, Is.True);
-                Assert.That(document.NumPages, Is.EqualTo(0));
-                Assert.AreEqual(document.NumPages, 0);
-            }
+            // Assert
+            Assert.That(addedPage, Is.True);
+            Assert.That(document.NumPages, Is.EqualTo(0));
+            Assert.AreEqual(document.NumPages, 0);
         }
 
         private void ProcessImageFileActAssertHelper(AggregateResultRenderer renderer, string filename)
         {
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
-
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
+            
             string imageName = Path.GetFileNameWithoutExtension(filename);
             using PixArray pixA = this.ReadImageFileIntoPixArray(filename);
 
@@ -412,7 +402,7 @@
             Assert.AreEqual(document.NumPages, expectedPageNumber);
             foreach (Pix pix in pixA)
             {
-                using Page? page = engine?.Process(pix, imageName);
+                using Page? page = pageFactory.CreatePage(pix, builder => builder.WithInputName(imageName));
                 if (page == null) continue;
                 bool addedPage = document.AddPage(page);
                 expectedPageNumber++;

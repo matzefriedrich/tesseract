@@ -24,7 +24,7 @@
 
         public string? GetHocrText(HandleRef handle, int pageNum, HocrTextFormat format)
         {
-            string? result = this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetHOCRTextInternal, handle, pageNum);
+            string? result = this.InvokeGetText(this.tesseractApiSignatures.GetHOCRTextInternal, handle, pageNum);
             if (result == null) return null;
 
             switch (format)
@@ -40,32 +40,32 @@
 
         public string? GetAltoText(HandleRef handle, int pageNum)
         {
-            return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetAltoTextInternal, handle, pageNum);
+            return this.InvokeGetText(this.tesseractApiSignatures.GetAltoTextInternal, handle, pageNum);
         }
 
         public string? GetTsvText(HandleRef handle, int pageNum)
         {
-            return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetTsvTextInternal, handle, pageNum);
+            return this.InvokeGetText(this.tesseractApiSignatures.GetTsvTextInternal, handle, pageNum);
         }
 
         public string? GetBoxText(HandleRef handle, int pageNum)
         {
-            return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetBoxTextInternal, handle, pageNum);
+            return this.InvokeGetText(this.tesseractApiSignatures.GetBoxTextInternal, handle, pageNum);
         }
 
         public string? GetLstmBoxText(HandleRef handle, int pageNum)
         {
-            return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetLSTMBoxTextInternal, handle, pageNum);
+            return this.InvokeGetText(this.tesseractApiSignatures.GetLSTMBoxTextInternal, handle, pageNum);
         }
 
         public string? GetWordStrBoxText(HandleRef handle, int pageNum)
         {
-            return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetWordStrBoxTextInternal, handle, pageNum);
+            return this.InvokeGetText(this.tesseractApiSignatures.GetWordStrBoxTextInternal, handle, pageNum);
         }
 
         public string? GetUnlvText(HandleRef handle)
         {
-            IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetUNLVTextInternal(handle);
+            IntPtr txtHandle = this.tesseractApiSignatures.GetUNLVTextInternal(handle);
             if (txtHandle == IntPtr.Zero) return null;
 
             string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
@@ -75,7 +75,7 @@
 
         public string? GetStringVariable(HandleRef handle, string name)
         {
-            IntPtr resultHandle = this.tesseractApiSignatures.BaseApiGetStringVariableInternal(handle, name);
+            IntPtr resultHandle = this.tesseractApiSignatures.GetStringVariableInternal(handle, name);
             if (resultHandle != IntPtr.Zero)
                 return MarshalHelper.PtrToString(resultHandle, Encoding.UTF8);
             return null;
@@ -83,7 +83,7 @@
 
         public string? GetUtf8Text(HandleRef handle)
         {
-            IntPtr txtHandle = this.tesseractApiSignatures.BaseAPIGetUTF8TextInternal(handle);
+            IntPtr txtHandle = this.tesseractApiSignatures.GetUTF8TextInternal(handle);
             if (txtHandle == IntPtr.Zero) return null;
 
             string? result = MarshalHelper.PtrToString(txtHandle, Encoding.UTF8);
@@ -93,7 +93,7 @@
 
         public int? Initialize(HandleRef handle, string dataPath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams)
         {
-            if (handle.Handle == IntPtr.Zero) throw new ArgumentException($"The given handle is invalid. Use {nameof(this.tesseractApiSignatures.BaseApiCreate)} to get one.");
+            if (handle.Handle == IntPtr.Zero) throw new ArgumentException($"The given handle is invalid. Use {nameof(this.tesseractApiSignatures.Create)} to get one.");
             if (string.IsNullOrWhiteSpace(language)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(language));
             ArgumentNullException.ThrowIfNull(configFiles);
             ArgumentNullException.ThrowIfNull(initialValues);
@@ -117,7 +117,7 @@
             }
 
             var varsVecSize = new UIntPtr((uint)varNames.Length);
-            return this.tesseractApiSignatures.BaseApiInit(handle, dataPath, language, mode,
+            return this.tesseractApiSignatures.Init4(handle, dataPath, language, mode,
                 configFilesArray, configFilesArray.Length,
                 varNames, varValues,
                 varsVecSize, setOnlyNonDebugParams);
@@ -129,7 +129,7 @@
             try
             {
                 valuePtr = MarshalHelper.StringToPtr(value, Encoding.UTF8);
-                return this.tesseractApiSignatures.BaseApiSetDebugVariable(handle, name, valuePtr);
+                return this.tesseractApiSignatures.SetDebugVariable(handle, name, valuePtr);
             }
             finally
             {
@@ -143,7 +143,7 @@
             try
             {
                 valuePtr = MarshalHelper.StringToPtr(value, Encoding.UTF8);
-                return this.tesseractApiSignatures.BaseApiSetVariable(handle, name, valuePtr);
+                return this.tesseractApiSignatures.SetVariable(handle, name, valuePtr);
             }
             finally
             {

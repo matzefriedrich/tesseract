@@ -11,7 +11,7 @@
         [SetUp]
         public void Init()
         {
-            this.services.AddTesseract();
+            this.services.AddTesseract(new EngineOptionDefaults(DataPath));
             this.provider = this.services.BuildServiceProvider();
         }
 
@@ -28,14 +28,12 @@
         public void ResultIterator_GetText_returns_null_for_each_level(PageIteratorLevel level)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
 
             string filename = MakeAbsoluteTestFilePath("Ocr/blank.tif");
             using Pix emptyPix = pixFactory.LoadFromFile(filename);
-            using Page page = engineFactory(engineOptions).Process(emptyPix);
+            using Page page = pageFactory.CreatePage(emptyPix);
 
             using ResultIterator sut = page.GetIterator();
 

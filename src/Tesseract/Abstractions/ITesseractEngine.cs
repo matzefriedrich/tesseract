@@ -1,10 +1,13 @@
 ﻿namespace Tesseract.Abstractions
 {
     using System;
+    using System.Runtime.InteropServices;
     using Interop;
 
     public interface ITesseractEngine : IDisposable
     {
+        HandleRef Handle { get; }
+        
         string? Version { get; }
 
         /// <summary>
@@ -12,53 +15,7 @@
         ///     <see cref="Tesseract.TesseractEngine.Process(Pix, Rect, PageSegMode?)" />.
         /// </summary>
         PageSegMode DefaultPageSegMode { get; set; }
-
-        /// <summary>
-        ///     Processes the specific image.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="pageSegMode">The page layout analysis method to use.</param>
-        Page Process(Pix image, PageSegMode? pageSegMode = null);
-
-        /// <summary>
-        ///     Processes a specified region in the image using the specified page layout analysis mode.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="region">The image region to process.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
-        /// <returns>A result iterator</returns>
-        Page Process(Pix image, Rect region, PageSegMode? pageSegMode = null);
-
-        /// <summary>
-        ///     Processes the specific image.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="inputName">Sets the input file's name, only needed for training or loading a uzn file.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
-        Page Process(Pix image, string inputName, PageSegMode? pageSegMode = null);
-
-        /// <summary>
-        ///     Processes a specified region in the image using the specified page layout analysis mode.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="inputName">Sets the input file's name, only needed for training or loading a uzn file.</param>
-        /// <param name="region">The image region to process.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
-        /// <returns>A result iterator</returns>
-        Page Process(Pix image, string? inputName, Rect region, PageSegMode? pageSegMode = null);
-
+        
         bool SetDebugVariable(string name, string value);
 
         /// <summary>

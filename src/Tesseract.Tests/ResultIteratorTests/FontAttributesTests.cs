@@ -3,6 +3,7 @@ namespace Tesseract.Tests.ResultIteratorTests
     using Abstractions;
     using Interop;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
     using NUnit.Framework;
 
     [TestFixture]
@@ -11,7 +12,7 @@ namespace Tesseract.Tests.ResultIteratorTests
         [SetUp]
         public void Init()
         {
-            this.services.AddTesseract();
+            this.services.AddTesseract().AddSingleton<IOptions<EngineOptionDefaults>>(new OptionsWrapper<EngineOptionDefaults>(new EngineOptionDefaults(DataPath)));
             this.provider = this.services.BuildServiceProvider();
         }
 
@@ -28,13 +29,14 @@ namespace Tesseract.Tests.ResultIteratorTests
         public void GetWordFontAttributesWorks()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            using ITesseractEngine engine = engineFactory(new TesseractEngineOptionBuilder(DataPath, mode: EngineMode.TesseractOnly).Build());
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
+            
             using Pix testImage = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath("Ocr/Fonts.tif"));
 
-            using Page page = engine.Process(testImage) ?? throw new ArgumentNullException("this.Engine?.Process(this.TestImage)");
+            void ConfigurePage(PageBuilder builder) => builder.WithEngineOptions(engineOptions => engineOptions.WithMode(EngineMode.TesseractOnly));
+
+            using Page page = pageFactory.CreatePage(testImage, ConfigurePage);
             using ResultIterator iter = page.GetIterator();
             // font attributes come in this order in the test image:
             // bold, italic, monospace, serif, smallcaps

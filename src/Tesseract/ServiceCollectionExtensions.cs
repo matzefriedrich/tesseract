@@ -6,15 +6,28 @@
     using Interop;
     using Interop.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
     using Rendering;
     using Rendering.Abstractions;
 
-    public static class ServiceCollectionExtenions
+    public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddTesseract(this IServiceCollection services)
+        public static IServiceCollection AddTesseract(this IServiceCollection services, EngineOptionDefaults? engineDefaults = null)
         {
             ArgumentNullException.ThrowIfNull(services);
 
+            if (engineDefaults != null)
+            {
+                var wrapper = new OptionsWrapper<EngineOptionDefaults>(engineDefaults);
+                services.TryAddSingleton<IOptions<EngineOptionDefaults>>(wrapper);
+            }
+
+            services.TryAddSingleton<ILoggerFactory>(new NullLoggerFactory());
+            services.AddTransient<EngineOptionBuilder>();
+            
             services
                 .AddTesseractApi()
                 .AddLeptonicaApi();
@@ -29,16 +42,15 @@
             services.AddTransient<IPixFileWriter, PixFileWriter>();
 
             services.AddTransient<IResultRendererFactory, ResultRendererFactory>();
-            services.AddTransient<TesseractEngineFactory>(provider =>
+            services.AddSingleton<IPageFactory, PageFactory>();
+            services.AddTransient<ITesseractEngineFactory, DefaultTesseractEngineFactory>();
+            services.AddTransient<ConfigurableTesseractEngineFactory>(provider =>
             {
                 return options =>
                 {
                     var api = provider.GetRequiredService<IManagedTesseractApi>();
                     var native = provider.GetRequiredService<ITessApiSignatures>();
-                    var leptonicaNativeApi = provider.GetRequiredService<ILeptonicaApiSignatures>();
-                    var pixFactory = provider.GetRequiredService<IPixFactory>();
-                    var pixFileWriter = provider.GetRequiredService<IPixFileWriter>();
-                    return new TesseractEngine(api, native, leptonicaNativeApi, pixFactory, pixFileWriter, options);
+                    return new TesseractEngine(api, native, options);
                 };
             });
 

@@ -22,20 +22,11 @@
             if (!Directory.Exists(this.ResultsDirectory))
                 Directory.CreateDirectory(this.ResultsDirectory);
 
-            this.services.AddTesseract();
+            this.services.AddTesseract(new EngineOptionDefaults(DataPath));
             this.provider = this.services.BuildServiceProvider();
         }
 
         private readonly ServiceCollection services = new();
-
-        private ITesseractEngine CreateEngine()
-        {
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath, "osd")
-                .Build();
-
-            return engineFactory(engineOptions);
-        }
 
         private string ResultsDirectory => TestResultPath(@"Analysis/");
 
@@ -53,6 +44,7 @@
             var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
             var pixFileWriter = this.provider.GetRequiredService<IPixFileWriter>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             var rotator = new ImageRotator(api, pixFactory);
 
@@ -60,12 +52,11 @@
             using Pix rotatedImage = angle.HasValue ? rotator.RotateImage(img, MathHelper.ToRadians(angle.Value)) : pixFactory.Clone(img);
             string filename = this.TestResultRunFile($@"AnalyseResult/AnalyseLayout_RotateImage_{angle}.png");
             pixFileWriter.Save(rotatedImage, filename);
-
-            using ITesseractEngine engine = this.CreateEngine();
-            if (engine != null) engine.DefaultPageSegMode = PageSegMode.AutoOsd;
-
+            
             // Act
-            using Page page = engine?.Process(rotatedImage) ?? throw new ArgumentNullException("tesseractEngine?.Process(rotatedImage)");
+            void ConfigurePage(PageBuilder builder) => builder.WithAnalysisMode(PageSegMode.AutoOsd);
+            using Page page = pageFactory.CreatePage(rotatedImage, ConfigurePage);
+                
             using ResultIterator pageLayout = page.GetIterator();
             pageLayout.Begin();
             do
@@ -117,14 +108,15 @@
                 PageSegMode.SingleWord)]
             PageSegMode pageSegMode)
         {
-            using ITesseractEngine engine = this.CreateEngine();
             var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
+
             var rotator = new ImageRotator(api, pixFactory);
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
             using Pix rotatedPix = rotator.RotateImage(img, (float)Math.PI);
-            using Page page = engine.Process(rotatedPix, pageSegMode);
+            using Page page = pageFactory.CreatePage(rotatedPix, builder => builder.WithAnalysisMode(pageSegMode));
 
             page.DetectBestOrientationAndScript(out int orientation, out float _, out string? scriptName, out float? _);
 
@@ -141,9 +133,9 @@
         public void DetectOrientation_Degrees_RotatedImage(int expectedOrientation)
         {
             // Arrange
-            using ITesseractEngine engine = this.CreateEngine();
             var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
             var rotator = new ImageRotator(api, pixFactory);
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
@@ -152,7 +144,8 @@
             using Pix rotatedPix = rotator.RotateImage(img, radAngle);
 
             // Act
-            using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
+            void ConfigurePage(PageBuilder builder) => builder.WithAnalysisMode(PageSegMode.OsdOnly);
+            using Page page = pageFactory.CreatePage(rotatedPix, ConfigurePage);
 
             page.DetectBestOrientationAndScript(out int orientation, out float _, out string? scriptName, out float? _);
 
@@ -169,9 +162,9 @@
         public void DetectOrientation_Legacy_RotatedImage(int expectedOrientationDegrees)
         {
             // Arrange
-            using ITesseractEngine engine = this.CreateEngine();
             var api = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ILeptonicaApiSignatures>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
             var rotator = new ImageRotator(api, pixFactory);
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
@@ -180,7 +173,8 @@
             using Pix rotatedPix = rotator.RotateImage(img, radAngle);
 
             // Act
-            using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
+            void ConfigurePage(PageBuilder builder) => builder.WithAnalysisMode(PageSegMode.OsdOnly);
+            using Page page = pageFactory.CreatePage(rotatedPix, ConfigurePage);
             page.DetectBestOrientation(out int orientation, out float _);
 
             // Assert
@@ -194,12 +188,12 @@
             [Values(0, 3)] int padding)
         {
             // Arrange
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
             var pixFileWriter = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFileWriter>();
-            using ITesseractEngine engine = this.CreateEngine();
 
             using Pix img = this.LoadTestImage(ExampleImagePath);
-            using Page? page = engine.Process(img);
-            using ResultIterator pageLayout = page?.GetIterator() ?? throw new ArgumentNullException("page?.GetIterator()");
+            using Page page = pageFactory.CreatePage(img);
+            using ResultIterator pageLayout = page.GetIterator() ?? throw new ArgumentNullException("page?.GetIterator()");
             pageLayout.Begin();
 
             // Act

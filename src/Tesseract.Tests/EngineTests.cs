@@ -12,7 +12,7 @@
         [SetUp]
         public void Init()
         {
-            this.services.AddTesseract();
+            this.services.AddTesseract(new EngineOptionDefaults(DataPath));
 
             this.provider = this.services.BuildServiceProvider();
         }
@@ -31,11 +31,10 @@
         public void CanGetVersion()
         {
             // Arrange
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            var factory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
+            var factory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
 
             // Act
-            using ITesseractEngine engine = factory(engineOptions);
+            using ITesseractEngine engine = factory.CreateEngine();
 
             // Assert
             const string expectedEngineVersion = "5.0.0";
@@ -43,14 +42,11 @@
         }
 
         [Test]
-        public void CanParseMultipageTif()
+        public void CanParseMultiPageTiff()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixArrayFactory = this.provider.GetRequiredService<IPixArrayFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string filename = MakeAbsoluteTestFilePath("./processing/multi-page.tif");
 
@@ -59,7 +55,7 @@
             var i = 0;
             foreach (Pix pix in pixA)
             {
-                using Page page = engine.Process(pix);
+                using Page page = pageFactory.CreatePage(pix);
                 string? text = page.GetText()?.Trim();
 
                 var expectedText = $"Page {++i}";
@@ -70,14 +66,11 @@
         }
 
         [Test]
-        public void CanParseMultipageTifOneByOne()
+        public void CanParseMultiPageTiffOneByOne()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string filename = MakeAbsoluteTestFilePath("./processing/multi-page.tif");
 
@@ -88,7 +81,7 @@
             {
                 // read pages one at a time
                 using Pix img = pixFactory.ReadFromMultiPageTiff(filename, ref offset);
-                using Page page = engine.Process(img);
+                using Page page = pageFactory.CreatePage(img);
                 string? text = page.GetText()?.Trim();
                 var expectedText = $"Page {++i}";
 
@@ -107,17 +100,14 @@
         public void CanParseText_UsingMode(PageSegMode mode, string expectedText)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath, mode: EngineMode.TesseractAndLstm).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             var demoFilename = $"./Ocr/PSM_{mode}.png";
             using Pix pix = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(demoFilename));
 
             // Act
-            using Page page = engine.Process(pix, mode);
+            using Page page = pageFactory.CreatePage(pix, builder => builder.WithAnalysisMode(mode));
             string? text = page.GetText()?.Trim();
 
             // Assert
@@ -128,15 +118,12 @@
         public void CanParseText()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string filename = MakeAbsoluteTestFilePath(TestImagePath);
             using Pix img = pixFactory.LoadFromFile(filename);
-            using Page page = engine.Process(img);
+            using Page page = pageFactory.CreatePage(img);
 
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
@@ -152,11 +139,8 @@
         public void CanParseUznFile()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string inputFilename = MakeAbsoluteTestFilePath(@"Ocr/uzn-test.png");
             using Pix img = pixFactory.LoadFromFile(inputFilename);
@@ -164,22 +148,27 @@
             const string expectedText = "This is another test\n";
 
             // Act
-            using Page page = engine.Process(img, inputFilename, PageSegMode.SingleLine);
+            using Page page = pageFactory.CreatePage(img, ConfigurePage);
             string? text = page.GetText();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
+            return;
+
+            void ConfigurePage(PageBuilder builder)
+            {
+                builder
+                    .WithInputName(inputFilename)
+                    .WithAnalysisMode(PageSegMode.SingleLine);
+            }
         }
 
         [Test]
         public void CanProcessBitmap()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixConverter = this.provider.GetRequiredService<IPixConverter>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string testImgFilename = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             using var img = new Bitmap(testImgFilename);
@@ -187,7 +176,7 @@
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
             // Act
-            using Page page = engine.Process(pixConverter, img);
+            using Page page = pageFactory.CreatePageFromBitmap(pixConverter, img);
             string? text = page.GetText();
 
             // Assert
@@ -199,17 +188,14 @@
         public void CanProcessSpecifiedRegionInImage()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath, mode: EngineMode.LstmOnly).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
             Rect region = Rect.FromCoords(0, 0, img.Width, 188);
 
             //  Act
-            using Page page = engine.Process(img, region);
+            using Page page = pageFactory.CreatePage(img, builder => builder.Region(region));
             string? text = page.GetText();
 
             const string expectedTextRegion1 = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n";
@@ -223,14 +209,11 @@
         public void CanProcessDifferentRegionsInSameImage()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-            using Page page = engine.Process(img, Rect.FromCoords(0, 0, img.Width, 188));
+            using Page page = pageFactory.CreatePage(img, builder => builder.Region(Rect.FromCoords(0, 0, img.Width, 188)));
             string? region1Text = page.GetText();
 
             const string expectedTextRegion1 = "This is a lot of 12 point text to test the\ncor code and see if it works on all types\nof file format.\n";
@@ -249,11 +232,8 @@
         public void CanGetSegmentedRegions()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const int expectedCount = 8; // number of text lines in test image
 
@@ -261,7 +241,7 @@
             using Pix img = pixFactory.LoadFromFile(imgPath);
 
             // Act
-            using Page page = engine.Process(img);
+            using Page page = pageFactory.CreatePage(img);
             List<Rectangle> boxes = page.GetSegmentedRegions(PageIteratorLevel.TextLine);
 
             for (var i = 0; i < boxes.Count; i++)
@@ -278,20 +258,14 @@
         public void CanProcessEmptyPxUsingResultIterator()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath("Ocr/empty.png"));
+            using Page page = pageFactory.CreatePage(img);
 
-            string? actualResult;
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath("Ocr/empty.png"));
-                using Page page = engine.Process(img);
-
-                // Act
-                actualResult = PageSerializer.Serialize(page, false);
-            }
+            // Act
+            string? actualResult = PageSerializer.Serialize(page, false);
 
             // Assert
             Assert.That(actualResult, Is.EqualTo(TestUtils.NormaliseNewLine(@"</word></line>
@@ -304,11 +278,8 @@
         public void CanProcessMultiplePixs()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
@@ -316,7 +287,7 @@
             for (var i = 0; i < 3; i++)
             {
                 using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+                using Page page = pageFactory.CreatePage(img);
                 string? text = page.GetText();
 
                 // Assert
@@ -328,23 +299,18 @@
         public void CanProcessPixUsingResultIterator()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultPath = "EngineTests/CanProcessPixUsingResultIterator.txt";
             string actualResultPath = this.TestResultRunFile(resultPath);
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? pageString = PageSerializer.Serialize(page, false);
-                File.WriteAllText(actualResultPath, pageString);
-            }
+            // Act
+            string? pageString = PageSerializer.Serialize(page, false);
+            File.WriteAllText(actualResultPath, pageString);
 
             // Assert
             this.CheckResult(resultPath);
@@ -355,11 +321,8 @@
         public void CanProcessScaledBitmap()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var converter = this.provider.GetRequiredService<IPixConverter>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string imagePath = MakeAbsoluteTestFilePath(TestImagePath);
             using Image img = Image.FromFile(imagePath);
@@ -368,7 +331,7 @@
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.";
 
             // Act
-            using Page page = engine.Process(converter, scaledImg);
+            using Page page = pageFactory.CreatePageFromBitmap(converter, scaledImg);
             string? text = page.GetText()?.Trim();
 
             // Assert
@@ -379,22 +342,17 @@
         public void CanGenerateHOCROutput([Values(true, false)] bool useXHtml)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             var resultFilename = $"EngineTests/CanGenerateHOCROutput_{useXHtml}.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? hocrText = page.GetHocrText(1, useXHtml);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), hocrText);
-            }
+            // Act
+            string? hocrText = page.GetHocrText(1, useXHtml);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), hocrText);
 
             // Assert
             this.AssertXDocumentsAreEqual(resultFilename);
@@ -404,23 +362,18 @@
         public void CanGenerateAltoOutput()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = "EngineTests/CanGenerateAltoOutput.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? altoText = page.GetAltoText(1);
-                string? actualResult = TestUtils.NormaliseNewLine(altoText);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
-            }
+            // Act
+            string? altoText = page.GetAltoText(1);
+            string? actualResult = TestUtils.NormaliseNewLine(altoText);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -430,23 +383,18 @@
         public void CanGenerateTsvOutput()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = "EngineTests/CanGenerateTsvOutput.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? tsvText = page.GetTsvText(1);
-                string? actualResult = TestUtils.NormaliseNewLine(tsvText);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
-            }
+            // Act
+            string? tsvText = page.GetTsvText(1);
+            string? actualResult = TestUtils.NormaliseNewLine(tsvText);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -456,22 +404,17 @@
         public void CanGenerateBoxOutput()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = "EngineTests/CanGenerateBoxOutput.txt";
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? boxText = page.GetBoxText(1);
-                string? actualResult = TestUtils.NormaliseNewLine(boxText);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
-            }
+            // Act
+            string? boxText = page.GetBoxText(1);
+            string? actualResult = TestUtils.NormaliseNewLine(boxText);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -481,23 +424,18 @@
         public void CanGenerateLSTMBoxOutput()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = "EngineTests/CanGenerateLSTMBoxOutput.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? lstmBoxText = page.GetLstmBoxText(1);
-                string? actualResult = TestUtils.NormaliseNewLine(lstmBoxText);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
-            }
+            // Act
+            string? lstmBoxText = page.GetLstmBoxText(1);
+            string? actualResult = TestUtils.NormaliseNewLine(lstmBoxText);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -507,23 +445,18 @@
         public void CanGenerateWordStrBoxOutput()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = "EngineTests/CanGenerateWordStrBoxOutput.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? wordStrBoxText = page.GetWordStrBoxText(1);
-                string? actualResult = TestUtils.NormaliseNewLine(wordStrBoxText);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
-            }
+            // Act
+            string? wordStrBoxText = page.GetWordStrBoxText(1);
+            string? actualResult = TestUtils.NormaliseNewLine(wordStrBoxText);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -533,23 +466,18 @@
         public void CanGenerateUNLVOutput()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = "EngineTests/CanGenerateUNLVOutput.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? unlvText = page.GetUnlvText();
-                string? actualResult = TestUtils.NormaliseNewLine(unlvText);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
-            }
+            // Act
+            string? unlvText = page.GetUnlvText();
+            string? actualResult = TestUtils.NormaliseNewLine(unlvText);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -559,22 +487,17 @@
         public void CanProcessPixUsingResultIteratorAndChoiceIterator()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
             var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             const string resultFilename = @"EngineTests/CanProcessPixUsingResultIteratorAndChoiceIterator.txt";
 
-            using (ITesseractEngine engine = engineFactory(engineOptions))
-            {
-                using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-                using Page page = engine.Process(img);
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+            using Page page = pageFactory.CreatePage(img);
 
-                // Act
-                string? pageString = PageSerializer.Serialize(page, true);
-                File.WriteAllText(this.TestResultRunFile(resultFilename), pageString);
-            }
+            // Act
+            string? pageString = PageSerializer.Serialize(page, true);
+            File.WriteAllText(this.TestResultRunFile(resultFilename), pageString);
 
             // Assert
             this.CheckResult(resultFilename);
@@ -584,50 +507,68 @@
         public void Initialise_CanLoadConfigFile()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
             const string configFile = "bazzar";
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath)
-                .WithConfigFile(configFile)
-                .Build();
+
+            var pixFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFactory>();
+            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
+
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             // Act
-            using ITesseractEngine engine = engineFactory(engineOptions);
-
-            using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
-            using Page page = engine.Process(img);
+            using Page page = pageFactory.CreatePage(img, ConfigurePage);
             string? text = page.GetText();
 
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
             // Assert
-            string? user_patterns_suffix;
-            if (engine.TryGetStringVariable("user_words_suffix", out user_patterns_suffix))
-                Assert.That(user_patterns_suffix, Is.EqualTo("user-words"));
-            else
-                Assert.Fail("Failed to retrieve value for 'user_words_suffix'.");
-
             Assert.That(text, Is.EqualTo(expectedText));
+            return;
+
+            void ConfigureEngine(EngineOptionBuilder optionBuilder)
+            {
+                optionBuilder.WithConfigFile(configFile);
+            }
+
+            void ConfigurePage(PageBuilder builder)
+            {
+                builder.WithEngineOptions(ConfigureEngine);
+            }
+        }
+
+        [Test]
+        public void TesseractEngine_TryGetStringVariable_reflects_variables_from_config_file()
+        {
+            // Arrange
+            const string configFile = "bazzar";
+            const string variableName = "user_words_suffix";
+            const string expectedVariableValue = "user-words";
+
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+
+            using ITesseractEngine engine = engineFactory.CreateEngine(builder => builder.WithConfigFile(configFile));
+
+            // Act
+            string? user_patterns_suffix;
+            bool actual = engine.TryGetStringVariable(variableName, out user_patterns_suffix);
+
+            // Assert
+            Assert.IsTrue(actual);
+            Assert.That(user_patterns_suffix, Is.EqualTo(expectedVariableValue));
         }
 
         [Test]
         public void Initialise_CanPassInitVariables()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
 
             var initVars = new Dictionary<string, object>
             {
                 { "load_system_dawg", false }
             };
 
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath)
-                .WithInitialOptions(initVars)
-                .Build();
-
             //Act
-            using ITesseractEngine? engine = engineFactory(engineOptions);
+            using ITesseractEngine engine = engineFactory.CreateEngine(builder => builder.WithOptions(initVars));
 
             // Assert
             if (!engine.TryGetBoolVariable("load_system_dawg", out bool loadSystemDawg)) Assert.Fail("Failed to get 'load_system_dawg'.");
@@ -639,14 +580,12 @@
         public void Initialise_Rus_ShouldStartEngine()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
 
             const string language = "rus";
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath, language)
-                .Build();
 
             //Act
-            using ITesseractEngine? engine = engineFactory(engineOptions);
+            using ITesseractEngine? engine = engineFactory.CreateEngine(builder => builder.Language(language));
 
             // Assert
             Assert.NotNull(engine);
@@ -656,22 +595,26 @@
         public void Initialise_ShouldStartEngine([ValueSource("DataPaths")] string datapath)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(datapath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+
+            // Act
+            using ITesseractEngine engine = engineFactory.CreateEngine(builder => builder.OverrideDataPath(DataPath));
+
+            // Assert
+            Assert.IsNotNull(engine);
         }
 
         [Test]
-        public void Initialise_ShouldThrowErrorIfDatapathNotCorrect()
+        public void Initialise_ShouldThrowErrorIfDataPathNotCorrect()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder("./this-path-does-not-exist").Build();
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+            const string invalidPath = "./this-path-does-not-exist";
 
             // Act, Assert
             Assert.That(() =>
             {
-                using ITesseractEngine engine = engineFactory(engineOptions);
+                using ITesseractEngine engine = engineFactory.CreateEngine(builder => builder.OverrideDataPath(invalidPath));
             }, Throws.InstanceOf(typeof(TesseractException)));
         }
 
@@ -691,10 +634,9 @@
         public void CanSetBooleanVariable(bool variableValue)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
 
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            using ITesseractEngine engine = engineFactory.CreateEngine();
 
             const string VariableName = "classify_enable_learning";
 
@@ -716,26 +658,32 @@
         public void CanSetClassifyBlnNumericModeVariable()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-            var pixFactory = this.provider.GetRequiredService<IPixFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
-
-            engine.SetVariable("classify_bln_numeric_mode", 1);
+            var pixFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFactory>();
+            var pageFactory = this.provider.GetRequiredService<IPageFactory>();
 
             string filename = MakeAbsoluteTestFilePath("./processing/numbers.png");
             using Pix img = pixFactory.LoadFromFile(filename);
 
             const string expectedText = "1234567890\n";
 
-            // Act
-            using Page page = engine.Process(img);
-            string? text = page.GetText();
+            using Page page = pageFactory.CreatePage(img, ConfigurePage);
 
+            // Act
+            string? text = page.GetText();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
+            return;
+
+            void ConfigurePage(PageBuilder builder)
+            {
+                builder.WithEngineOptions(ConfigureEngine);
+            }
+
+            void ConfigureEngine(EngineOptionBuilder builder)
+            {
+                builder.WithOption("classify_bln_numeric_mode", 1);
+            }
         }
 
         [Test]
@@ -745,10 +693,8 @@
         public void CanSetDoubleVariable(string variableName, double variableValue)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+            using ITesseractEngine engine = engineFactory.CreateEngine();
 
             // Act
             bool variableWasSet = engine.SetVariable(variableName, variableValue);
@@ -769,10 +715,8 @@
         public void CanSetIntegerVariable(string variableName, int variableValue)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+            using ITesseractEngine engine = engineFactory.CreateEngine();
 
             // Act
             bool variableWasSet = engine.SetVariable(variableName, variableValue);
@@ -793,10 +737,8 @@
         public void CanSetStringVariable(string variableName, string variableValue)
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+            using ITesseractEngine engine = engineFactory.CreateEngine();
 
             // Act
             bool variableWasSet = engine.SetVariable(variableName, variableValue);
@@ -813,10 +755,8 @@
         public void CanGetStringVariableThatDoesNotExist()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+            using ITesseractEngine engine = engineFactory.CreateEngine();
 
             // Act
             bool success = engine.TryGetStringVariable("illegal-variable", out string? result);
@@ -830,10 +770,8 @@
         public void CanPrintVariables()
         {
             // Arrange
-            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<TesseractEngineFactory>();
-
-            TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
-            using ITesseractEngine engine = engineFactory(engineOptions);
+            var engineFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<ITesseractEngineFactory>();
+            using ITesseractEngine engine = engineFactory.CreateEngine();
 
             const string ResultFilename = @"EngineTests/CanPrintVariables.txt";
             string actualResultsFilename = this.TestResultRunFile(ResultFilename);

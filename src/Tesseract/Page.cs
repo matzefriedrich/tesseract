@@ -26,9 +26,25 @@
         private Rect regionOfInterest;
 
         private bool runRecognitionPhase;
+        private readonly ITesseractEngine engine;
 
+        /// <summary>
+        /// Creates a new <see cref="Page"/> object.
+        /// </summary>
+        /// <param name="engine">An <see cref="ITesseractEngine"/> object that is exclusively owned by the current <see cref="Page"/> instance.</param>
+        /// <param name="api"></param>
+        /// <param name="nativeApi"></param>
+        /// <param name="leptonicaNativeApi"></param>
+        /// <param name="pixFactory"></param>
+        /// <param name="pixFileWriter"></param>
+        /// <param name="logger"></param>
+        /// <param name="image"></param>
+        /// <param name="imageName"></param>
+        /// <param name="regionOfInterest"></param>
+        /// <param name="pageSegmentMode"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         internal Page(
-            TesseractEngine engine,
+            ITesseractEngine engine,
             IManagedTesseractApi api,
             ITessApiSignatures nativeApi,
             ILeptonicaApiSignatures leptonicaNativeApi,
@@ -43,14 +59,12 @@
             this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
             this.pixFileWriter = pixFileWriter ?? throw new ArgumentNullException(nameof(pixFileWriter));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            this.engine = engine ?? throw new ArgumentNullException(nameof(engine));
             this.Image = image;
             this.ImageName = imageName;
             this.RegionOfInterest = regionOfInterest;
             this.PageSegmentMode = pageSegmentMode;
         }
-
-        public TesseractEngine Engine { get; }
 
         /// <summary>
         ///     Gets the <see cref="Pix" /> that is being ocr'd.
@@ -86,7 +100,7 @@
                 this.regionOfInterest = value;
 
                 // update region of interest in image
-                this.nativeApi.BaseApiSetRectangle(this.Engine.Handle, this.regionOfInterest.X1, this.regionOfInterest.Y1, this.regionOfInterest.Width, this.regionOfInterest.Height);
+                this.nativeApi.SetRectangle(this.engine.Handle, this.regionOfInterest.X1, this.regionOfInterest.Y1, this.regionOfInterest.Width, this.regionOfInterest.Height);
 
                 // request rerun of recognition on the next call that requires recognition
                 this.runRecognitionPhase = false;
@@ -101,7 +115,7 @@
         {
             this.Recognize();
 
-            IntPtr pixHandle = this.nativeApi.BaseAPIGetThresholdedImage(this.Engine.Handle);
+            IntPtr pixHandle = this.nativeApi.GetThresholdedImage(this.engine.Handle);
             if (pixHandle == IntPtr.Zero) throw new TesseractException(Resources.Resources.Page_GetThresholdedImage_Failed_to_get_thresholded_image_);
 
             return this.pixFactory.Create(pixHandle);
@@ -116,8 +130,8 @@
         {
             if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new ArgumentException($"Cannot analyze image layout when using OSD only page segmentation, please use {nameof(DetectBestOrientation)} instead.");
 
-            HandleRef engineHandle = this.Engine.Handle;
-            IntPtr resultIteratorHandle = this.nativeApi.BaseAPIAnalyseLayout(engineHandle);
+            HandleRef engineHandle = this.engine.Handle;
+            IntPtr resultIteratorHandle = this.nativeApi.AnalyseLayout(engineHandle);
             return new PageIterator(this.nativeApi, this.pixFactory, this, resultIteratorHandle);
         }
 
@@ -129,7 +143,7 @@
         public ResultIterator GetIterator()
         {
             this.Recognize();
-            IntPtr resultIteratorHandle = this.nativeApi.BaseApiGetIterator(this.Engine.Handle);
+            IntPtr resultIteratorHandle = this.nativeApi.GetIterator(this.engine.Handle);
             return new ResultIterator(this.api, this.nativeApi, this.pixFactory, this, resultIteratorHandle);
         }
 
@@ -140,7 +154,7 @@
         public string? GetText(Rect regionOfInterest = default)
         {
             this.Recognize();
-            HandleRef engineHandle = this.Engine.Handle;
+            HandleRef engineHandle = this.engine.Handle;
             return this.api.GetUtf8Text(engineHandle);
         }
 
@@ -156,7 +170,7 @@
 
             this.Recognize();
 
-            HandleRef engineHandle = this.Engine.Handle;
+            HandleRef engineHandle = this.engine.Handle;
             HocrTextFormat textFormat = useXHtml ? HocrTextFormat.XHtml : HocrTextFormat.Html;
             return this.api.GetHocrText(engineHandle, pageNum, textFormat);
         }
@@ -170,7 +184,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.GetAltoText(this.Engine.Handle, pageNum);
+            return this.api.GetAltoText(this.engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -182,7 +196,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.GetTsvText(this.Engine.Handle, pageNum);
+            return this.api.GetTsvText(this.engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -194,7 +208,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.GetBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetBoxText(this.engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -206,7 +220,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.GetLstmBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetLstmBoxText(this.engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -218,7 +232,7 @@
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.GetWordStrBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetWordStrBoxText(this.engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -228,7 +242,7 @@
         public string? GetUnlvText()
         {
             this.Recognize();
-            return this.api.GetUnlvText(this.Engine.Handle);
+            return this.api.GetUnlvText(this.engine.Handle);
         }
 
         /// <summary>
@@ -238,7 +252,7 @@
         public float GetMeanConfidence()
         {
             this.Recognize();
-            return this.nativeApi.BaseAPIMeanTextConf(this.Engine.Handle) / 100.0f;
+            return this.nativeApi.MeanTextConf(this.engine.Handle) / 100.0f;
         }
 
         /// <summary>
@@ -248,7 +262,7 @@
         /// <returns></returns>
         public List<Rectangle> GetSegmentedRegions(PageIteratorLevel pageIteratorLevel)
         {
-            IntPtr boxArray = this.nativeApi.BaseAPIGetComponentImages(this.Engine.Handle, pageIteratorLevel, Constants.True, IntPtr.Zero, IntPtr.Zero);
+            IntPtr boxArray = this.nativeApi.GetComponentImages(this.engine.Handle, pageIteratorLevel, Constants.True, IntPtr.Zero, IntPtr.Zero);
             int boxCount = this.leptonicaNativeApi.boxaGetCount(new HandleRef(this, boxArray));
 
             var boxList = new List<Rectangle>();
@@ -328,8 +342,8 @@
         public void DetectBestOrientationAndScript(out int orientation, out float confidence, out string? scriptName, out float? scriptConfidence)
         {
             scriptConfidence = null;
-            HandleRef engineHandle = this.Engine.Handle;
-            if (this.nativeApi.TessBaseAPIDetectOrientationScript(engineHandle, out int orientDeg, out float orientConf, out IntPtr scriptNameHandle, out float scriptConf) != 0)
+            HandleRef engineHandle = this.engine.Handle;
+            if (this.nativeApi.DetectOrientationScript(engineHandle, out int orientDeg, out float orientConf, out IntPtr scriptNameHandle, out float scriptConf) != 0)
             {
                 orientation = orientDeg;
                 confidence = orientConf;
@@ -347,12 +361,12 @@
             if (this.PageSegmentMode == PageSegMode.OsdOnly) throw new InvalidOperationException($"Cannot OCR image when using OSD only page segmentation, please use {nameof(DetectBestOrientation)} instead.");
             if (!this.runRecognitionPhase)
             {
-                if (this.nativeApi.BaseApiRecognize(this.Engine.Handle, new HandleRef(this, IntPtr.Zero)) != 0) throw new InvalidOperationException("Recognition of image failed.");
+                if (this.nativeApi.Recognize(this.engine.Handle, new HandleRef(this, IntPtr.Zero)) != 0) throw new InvalidOperationException("Recognition of image failed.");
 
                 this.runRecognitionPhase = true;
 
                 // now write out the thresholded image if required to do so
-                if (this.Engine.TryGetBoolVariable("tessedit_write_images", out bool tesseditWriteImages) && tesseditWriteImages)
+                if (this.engine.TryGetBoolVariable("tessedit_write_images", out bool tesseditWriteImages) && tesseditWriteImages)
                 {
                     using Pix thresholdedImage = this.GetThresholdedImage();
                     string filePath = Path.Combine(Environment.CurrentDirectory, "tessinput.tif");
@@ -375,11 +389,15 @@
         {
             if (this.IsDisposed == false && disposing)
             {
-                HandleRef engineHandle = this.Engine.Handle;
-                this.nativeApi.BaseAPIClear(engineHandle);
+                this.engine.Dispose();
             }
 
             base.Dispose(disposing);
+        }
+
+        internal HandleRef GetEngineHandle()
+        {
+            return this.engine.Handle;
         }
     }
 }

@@ -62,7 +62,8 @@
             // implicitly if required. This is why I've only made Page.Recognise internal not public.
             page.Recognize();
 
-            int result = this.native.ResultRendererAddImage(this.Handle, page.Engine.Handle);
+            HandleRef engineHandle = page.GetEngineHandle();
+            int result = this.native.ResultRendererAddImage(this.Handle, engineHandle);
             return result != 0;
         }
 

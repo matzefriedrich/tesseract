@@ -10,5 +10,7 @@
 
         public const int True = 1;
         public const int False = 0;
+        public const string TrueString = "TRUE";
+        public const string FalseString = "FALSE";
     }
 }
