@@ -1,13 +1,21 @@
 ﻿namespace Tesseract
 {
     using System.Collections.ObjectModel;
-
     using Abstractions;
 
+    /// <summary>
+    ///     Stores the configuration properties required to create <see cref="TesseractEngine" /> objects.
+    /// </summary>
+    /// <remarks>
+    ///     The <see cref="DataPath" /> property should point to the directory that contains the "testdata" folder. For
+    ///     example, if your tesseract language data is installed in <c>C:\Tesseract\tessdata</c> the value of <see cref="DataPath" /> should
+    ///     be <c>C:\Tesseract</c>. Note that tesseract will use the value of the <c>TESSDATA_PREFIX</c> environment variable
+    ///     if defined, effectively ignoring the value of <see cref="DataPath" /> parameter.
+    /// </remarks>
     public readonly struct TesseractEngineOptions
     {
         /// <summary>
-        ///     The path to the parent directory that contains the 'tessdata' directory, ignored if the <c>TESSDATA_PREFIX</c>
+        ///     The path to the parent directory that contains the tessdata directory, ignored if the <c>TESSDATA_PREFIX</c>
         ///     environment variable is defined.
         /// </summary>
         public string DataPath { get; init; }

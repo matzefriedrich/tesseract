@@ -56,7 +56,7 @@
             var pixFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IPixFactory>();
             var api = this.provider.GetRequiredService<ILeptonicaApiSignatures>();
             var writer = this.provider.GetRequiredService<IPixFileWriter>();
-            
+
             string sourcePixFilename = MakeAbsoluteTestFilePath(@"Binarization/neo-8bit-grayscale.png");
             using Pix sourcePix = pixFactory.LoadFromFile(sourcePixFilename);
 

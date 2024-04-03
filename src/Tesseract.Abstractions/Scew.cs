@@ -1,6 +1,6 @@
 ﻿namespace Tesseract.Abstractions
 {
-    public struct Scew : IEquatable<Scew>
+    public readonly struct Scew : IEquatable<Scew>
     {
         public Scew(float angle, float confidence)
         {
@@ -24,7 +24,11 @@
 
         public bool Equals(Scew other)
         {
-            return this.Confidence == other.Confidence && this.Angle == other.Angle;
+            const float confidencePrecisionThreshold = 0.001f;
+            const float anglePrecisionThreshold = 0.001f;
+
+            return Math.Abs(this.Confidence - other.Confidence) < confidencePrecisionThreshold
+                   && Math.Abs(this.Angle - other.Angle) < anglePrecisionThreshold;
         }
 
         public override int GetHashCode()

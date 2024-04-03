@@ -1,7 +1,6 @@
 ﻿namespace Tesseract
 {
     using System;
-
     using InteropDotNet;
 
     public sealed class TesseractEnvironment
@@ -10,7 +9,7 @@
 
         public TesseractEnvironment(LibraryLoader libraryLoader)
         {
-            this.libraryLoader = libraryLoader ?? throw new ArgumentNullException(nameof(this.libraryLoader));
+            this.libraryLoader = libraryLoader ?? throw new ArgumentNullException(nameof(libraryLoader));
         }
 
         /// <summary>
@@ -20,7 +19,7 @@
         ///     This search path should not include the platform component as this will automatically be appended to the string
         ///     based on the detected platform.
         /// </remarks>
-        public string CustomSearchPath
+        public string? CustomSearchPath
         {
             get => this.libraryLoader.CustomSearchPath;
             set => this.libraryLoader.CustomSearchPath = value;

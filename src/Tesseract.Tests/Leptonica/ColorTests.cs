@@ -1,9 +1,7 @@
 ﻿namespace Tesseract.Tests.Leptonica
 {
     using System.Drawing;
-
     using Abstractions;
-
     using NUnit.Framework;
 
     [TestFixture]

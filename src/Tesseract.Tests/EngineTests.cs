@@ -60,7 +60,7 @@
             foreach (Pix pix in pixA)
             {
                 using Page page = engine.Process(pix);
-                string text = page.GetText().Trim();
+                string? text = page.GetText()?.Trim();
 
                 var expectedText = $"Page {++i}";
 
@@ -87,9 +87,9 @@
             do
             {
                 // read pages one at a time
-                using Pix img = pixFactory.pixReadFromMultipageTiff(filename, ref offset);
+                using Pix img = pixFactory.ReadFromMultiPageTiff(filename, ref offset);
                 using Page page = engine.Process(img);
-                string text = page.GetText().Trim();
+                string? text = page.GetText()?.Trim();
                 var expectedText = $"Page {++i}";
 
                 // Assert
@@ -118,7 +118,7 @@
 
             // Act
             using Page page = engine.Process(pix, mode);
-            string text = page.GetText().Trim();
+            string? text = page.GetText()?.Trim();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
@@ -141,7 +141,7 @@
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
             // Act
-            string text = page.GetText();
+            string? text = page.GetText();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
@@ -165,7 +165,7 @@
 
             // Act
             using Page page = engine.Process(img, inputFilename, PageSegMode.SingleLine);
-            string text = page.GetText();
+            string? text = page.GetText();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
@@ -188,7 +188,7 @@
 
             // Act
             using Page page = engine.Process(pixConverter, img);
-            string text = page.GetText();
+            string? text = page.GetText();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
@@ -210,7 +210,7 @@
 
             //  Act
             using Page page = engine.Process(img, region);
-            string text = page.GetText();
+            string? text = page.GetText();
 
             const string expectedTextRegion1 = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n";
 
@@ -231,14 +231,14 @@
 
             using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
             using Page page = engine.Process(img, Rect.FromCoords(0, 0, img.Width, 188));
-            string region1Text = page.GetText();
+            string? region1Text = page.GetText();
 
             const string expectedTextRegion1 = "This is a lot of 12 point text to test the\ncor code and see if it works on all types\nof file format.\n";
             const string expectedTextRegion2 = "The quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
             // Act
             page.RegionOfInterest = Rect.FromCoords(0, 188, img.Width, img.Height);
-            string region2Text = page.GetText();
+            string? region2Text = page.GetText();
 
             // Assert
             Assert.That(region1Text, Is.EqualTo(expectedTextRegion1));
@@ -283,7 +283,7 @@
 
             TesseractEngineOptions engineOptions = new TesseractEngineOptionBuilder(DataPath).Build();
 
-            string actualResult;
+            string? actualResult;
             using (ITesseractEngine engine = engineFactory(engineOptions))
             {
                 using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath("Ocr/empty.png"));
@@ -317,7 +317,7 @@
             {
                 using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
                 using Page page = engine.Process(img);
-                string text = page.GetText();
+                string? text = page.GetText();
 
                 // Assert
                 Assert.That(text, Is.EqualTo(expectedText));
@@ -342,7 +342,7 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string pageString = PageSerializer.Serialize(page, false);
+                string? pageString = PageSerializer.Serialize(page, false);
                 File.WriteAllText(actualResultPath, pageString);
             }
 
@@ -369,7 +369,7 @@
 
             // Act
             using Page page = engine.Process(converter, scaledImg);
-            string text = page.GetText().Trim();
+            string? text = page.GetText()?.Trim();
 
             // Assert
             Assert.That(text, Is.EqualTo(expectedText));
@@ -392,7 +392,7 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string hocrText = page.GetHOCRText(1, useXHtml);
+                string? hocrText = page.GetHocrText(1, useXHtml);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), hocrText);
             }
 
@@ -417,8 +417,8 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string altoText = page.GetAltoText(1);
-                string actualResult = TestUtils.NormaliseNewLine(altoText);
+                string? altoText = page.GetAltoText(1);
+                string? actualResult = TestUtils.NormaliseNewLine(altoText);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
@@ -443,8 +443,8 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string tsvText = page.GetTsvText(1);
-                string actualResult = TestUtils.NormaliseNewLine(tsvText);
+                string? tsvText = page.GetTsvText(1);
+                string? actualResult = TestUtils.NormaliseNewLine(tsvText);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
@@ -468,8 +468,8 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string boxText = page.GetBoxText(1);
-                string actualResult = TestUtils.NormaliseNewLine(boxText);
+                string? boxText = page.GetBoxText(1);
+                string? actualResult = TestUtils.NormaliseNewLine(boxText);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
@@ -494,8 +494,8 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string lstmBoxText = page.GetLSTMBoxText(1);
-                string actualResult = TestUtils.NormaliseNewLine(lstmBoxText);
+                string? lstmBoxText = page.GetLstmBoxText(1);
+                string? actualResult = TestUtils.NormaliseNewLine(lstmBoxText);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
@@ -520,8 +520,8 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string wordStrBoxText = page.GetWordStrBoxText(1);
-                string actualResult = TestUtils.NormaliseNewLine(wordStrBoxText);
+                string? wordStrBoxText = page.GetWordStrBoxText(1);
+                string? actualResult = TestUtils.NormaliseNewLine(wordStrBoxText);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
@@ -546,8 +546,8 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string unlvText = page.GetUNLVText();
-                string actualResult = TestUtils.NormaliseNewLine(unlvText);
+                string? unlvText = page.GetUnlvText();
+                string? actualResult = TestUtils.NormaliseNewLine(unlvText);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), actualResult);
             }
 
@@ -572,7 +572,7 @@
                 using Page page = engine.Process(img);
 
                 // Act
-                string pageString = PageSerializer.Serialize(page, true);
+                string? pageString = PageSerializer.Serialize(page, true);
                 File.WriteAllText(this.TestResultRunFile(resultFilename), pageString);
             }
 
@@ -597,12 +597,12 @@
 
             using Pix img = pixFactory.LoadFromFile(MakeAbsoluteTestFilePath(TestImagePath));
             using Page page = engine.Process(img);
-            string text = page.GetText();
+            string? text = page.GetText();
 
             const string expectedText = "This is a lot of 12 point text to test the\nocr code and see if it works on all types\nof file format.\n\nThe quick brown dog jumped over the\nlazy fox. The quick brown dog jumped\nover the lazy fox. The quick brown dog\njumped over the lazy fox. The quick\nbrown dog jumped over the lazy fox.\n";
 
             // Assert
-            string user_patterns_suffix;
+            string? user_patterns_suffix;
             if (engine.TryGetStringVariable("user_words_suffix", out user_patterns_suffix))
                 Assert.That(user_patterns_suffix, Is.EqualTo("user-words"));
             else
@@ -731,7 +731,7 @@
 
             // Act
             using Page page = engine.Process(img);
-            string text = page.GetText();
+            string? text = page.GetText();
 
 
             // Assert
@@ -803,7 +803,7 @@
 
             // Assert
             Assert.That(variableWasSet, Is.True, "Failed to set variable '{0}'.", variableName);
-            if (engine.TryGetStringVariable(variableName, out string result))
+            if (engine.TryGetStringVariable(variableName, out string? result))
                 Assert.That(result, Is.EqualTo(variableValue));
             else
                 Assert.Fail("Failed to retrieve value for '{0}'.", variableName);
@@ -819,7 +819,7 @@
             using ITesseractEngine engine = engineFactory(engineOptions);
 
             // Act
-            bool success = engine.TryGetStringVariable("illegal-variable", out string result);
+            bool success = engine.TryGetStringVariable("illegal-variable", out string? result);
 
             // Assert
             Assert.That(success, Is.False);

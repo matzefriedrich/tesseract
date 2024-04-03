@@ -7,9 +7,9 @@
         Pix Create(int width, int height, int depth);
         Pix Create(IntPtr handle);
         Pix LoadFromFile(string filename);
-        unsafe Pix LoadFromMemory(byte[] bytes);
-        unsafe Pix LoadTiffFromMemory(byte[] bytes);
-        Pix pixReadFromMultipageTiff(string filename, ref int offset);
+        Pix LoadFromMemory(byte[] bytes);
+        Pix LoadTiffFromMemory(byte[] bytes);
+        Pix ReadFromMultiPageTiff(string filename, ref int offset);
         Pix Clone(Pix source);
     }
 }

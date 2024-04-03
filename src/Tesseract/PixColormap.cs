@@ -2,12 +2,8 @@
 {
     using System;
     using System.Runtime.InteropServices;
-
     using Abstractions;
-
     using Interop.Abstractions;
-
-    using JetBrains.Annotations;
 
     /// <summary>
     ///     Represents a colormap.
@@ -20,7 +16,7 @@
     {
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        internal PixColormap([NotNull] ILeptonicaApiSignatures leptonicaApi, IntPtr handle)
+        internal PixColormap(ILeptonicaApiSignatures leptonicaApi, IntPtr handle)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
             this.Handle = new HandleRef(this, handle);

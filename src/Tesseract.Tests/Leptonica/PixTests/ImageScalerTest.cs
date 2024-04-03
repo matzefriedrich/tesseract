@@ -9,11 +9,6 @@
     [TestFixture]
     public class ImageScalerTest : TesseractTestBase
     {
-        private const string ResultsDirectory = @"Results/ImageManipulation/";
-
-        private readonly ServiceCollection services = new();
-        private ServiceProvider? provider;
-
         [SetUp]
         public void Init()
         {
@@ -26,6 +21,11 @@
         {
             this.provider?.Dispose();
         }
+
+        private const string ResultsDirectory = @"Results/ImageManipulation/";
+
+        private readonly ServiceCollection services = new();
+        private ServiceProvider? provider;
 
         [Test]
         public void Scale_RGB_ShouldBeScaledBySpecifiedFactor([Values(0.25f, 0.5f, 0.75f, 1, 1.25f, 1.5f, 1.75f, 2, 4, 8)] float scale)

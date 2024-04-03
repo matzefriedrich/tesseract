@@ -1,7 +1,6 @@
 ﻿namespace Tesseract.Rendering.Abstractions
 {
     using System.Runtime.InteropServices;
-
     using Tesseract.Abstractions;
 
     /// <summary>
@@ -12,7 +11,7 @@
         /// <summary>
         ///     Stores the renderer handle who owns the current document.
         /// </summary>
-        protected HandleRef handle;
+        protected HandleRef Handle;
 
         public abstract bool AddPage(Page page);
         public abstract int GetPageNumber();

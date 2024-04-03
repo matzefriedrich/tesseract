@@ -1,26 +1,24 @@
 ﻿namespace Tesseract
 {
     using System;
-
     using Abstractions;
-
+    using ImageProcessing;
     using Interop;
     using Interop.Abstractions;
-
-    using JetBrains.Annotations;
-
     using Microsoft.Extensions.DependencyInjection;
+    using Rendering;
+    using Rendering.Abstractions;
 
     public static class ServiceCollectionExtenions
     {
-        public static IServiceCollection AddTesseract([NotNull] this IServiceCollection services)
+        public static IServiceCollection AddTesseract(this IServiceCollection services)
         {
-            if (services == null) throw new ArgumentNullException(nameof(services));
+            ArgumentNullException.ThrowIfNull(services);
 
             services
                 .AddTesseractApi()
                 .AddLeptonicaApi();
-            
+
             services.AddSingleton<IPixFactory, PixFactory>();
             services.AddSingleton<IPixArrayFactory, PixArrayFactory>();
             services.AddSingleton<IPixColorMapFactory, PixColorMapFactory>();
@@ -41,10 +39,11 @@
                     var pixFactory = provider.GetRequiredService<IPixFactory>();
                     var pixFileWriter = provider.GetRequiredService<IPixFileWriter>();
                     return new TesseractEngine(api, native, leptonicaNativeApi, pixFactory, pixFileWriter, options);
-
                 };
             });
 
+            services.AddImageProcessors();
+            
             return services;
         }
     }

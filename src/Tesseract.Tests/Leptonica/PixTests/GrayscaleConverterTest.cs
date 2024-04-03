@@ -9,10 +9,6 @@
     [TestFixture]
     public class GrayscaleConverterTest : TesseractTestBase
     {
-        private const string ResultsDirectory = @"Results/ImageManipulation/";
-        private readonly ServiceCollection services = new();
-        private ServiceProvider? provider;
-
         [SetUp]
         public void Init()
         {
@@ -25,6 +21,10 @@
         {
             this.provider?.Dispose();
         }
+
+        private const string ResultsDirectory = @"Results/ImageManipulation/";
+        private readonly ServiceCollection services = new();
+        private ServiceProvider? provider;
 
         [Test]
         public void ConvertRGBToGrayTest()

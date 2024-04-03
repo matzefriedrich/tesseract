@@ -1,9 +1,12 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Interop
 {
+    using System.Diagnostics.CodeAnalysis;
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum SelType
     {
-        SEL_DONT_CARE = 0,
-        SEL_HIT = 1,
-        SEL_MISS = 2
+        SelDontCare = 0,
+        SelHit = 1,
+        SelMiss = 2
     }
 }

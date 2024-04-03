@@ -3,28 +3,24 @@
     using System;
     using Abstractions;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
+    using Resources;
+    using Tesseract.Abstractions;
 
-    public class ColorQuantizer
+    public class ColorQuantizer : IColorQuantizer
     {
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        public ColorQuantizer([NotNull] ILeptonicaApiSignatures leptonicaApi)
+        public ColorQuantizer(ILeptonicaApiSignatures leptonicaApi)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
         }
 
-        /// <summary>
-        ///     Top-level conversion to 8 bpp.
-        /// </summary>
-        /// <param name="source">The source image to convert.</param>
-        /// <param name="colorMapFlag"></param>
-        /// <returns></returns>
-        public Pix ConvertTo8(Pix source, int colorMapFlag)
+        /// <inheritdoc />
+        public Pix ConvertTo8Bpp(Pix source, int colorMapFlag)
         {
             IntPtr resultHandle = this.leptonicaApi.pixConvertTo8(source.Handle, colorMapFlag);
 
-            if (resultHandle == IntPtr.Zero) throw new LeptonicaException("Failed to convert image to 8 bpp.");
+            if (resultHandle == IntPtr.Zero) throw new LeptonicaException(Resources.ColorQuantizer_ConvertTo8Bpp_Failed_to_convert_image_to_8_bpp_);
             return new Pix(this.leptonicaApi, resultHandle);
         }
     }

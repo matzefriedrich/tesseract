@@ -1,9 +1,7 @@
 ﻿namespace Tesseract.Tests.Leptonica.PixTests
 {
     using Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]

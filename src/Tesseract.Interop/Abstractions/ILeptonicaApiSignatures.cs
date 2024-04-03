@@ -1,5 +1,6 @@
 ﻿namespace Tesseract.Interop.Abstractions
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
     using InteropDotNet;
 
@@ -10,6 +11,9 @@
     ///     Please note this is only public for technical reasons (you can't proxy a internal interface). It should be
     ///     considered an internal interface and is NOT part of the public api and may have breaking changes between releases.
     /// </remarks>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
     public interface ILeptonicaApiSignatures
     {
         [RuntimeDllImport(Constants.LeptonicaDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pixaReadMultipageTiff")]

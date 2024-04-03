@@ -1,5 +1,8 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Interop
 {
+    using System.Diagnostics.CodeAnalysis;
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum PolyBlockType
     {
         /// <summary>

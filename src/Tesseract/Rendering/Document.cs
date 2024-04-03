@@ -5,14 +5,13 @@
     using System.Linq;
     using System.Threading;
     using Abstractions;
-    using JetBrains.Annotations;
     using Tesseract.Abstractions;
 
     public class Document : DisposableBase
     {
         private readonly IList<UnmanagedDocument> children = new List<UnmanagedDocument>();
         private readonly ReaderWriterLockSlim lockSlim = new();
-        
+
         public int NumPages { get; private set; } = -1;
 
         /// <summary>
@@ -22,7 +21,7 @@
         /// <returns></returns>
         public bool AddPage(Page page)
         {
-            if (page == null) throw new ArgumentNullException(nameof(page));
+            ArgumentNullException.ThrowIfNull(page);
             this.ThrowIfDisposed();
 
             this.NumPages++;
@@ -36,9 +35,9 @@
             return true;
         }
 
-        public void AddChild([NotNull] UnmanagedDocument child)
+        public void AddChild(UnmanagedDocument child)
         {
-            if (child == null) throw new ArgumentNullException(nameof(child));
+            ArgumentNullException.ThrowIfNull(child);
 
             this.ExecuteProtectedWrite(ProtectedAppendChild);
             return;
@@ -64,10 +63,7 @@
 
         protected override void Dispose(bool disposing)
         {
-            if (this.IsDisposed == false && disposing)
-            {
-                this.ExecuteProtectedWrite(this.DisposeChildren);
-            }
+            if (this.IsDisposed == false && disposing) this.ExecuteProtectedWrite(this.DisposeChildren);
         }
 
         private void DisposeChildren()

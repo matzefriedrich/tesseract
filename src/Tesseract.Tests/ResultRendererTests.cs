@@ -1,10 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
-    using System.Reflection.Metadata;
     using Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
     using Rendering;
     using Rendering.Abstractions;
@@ -36,7 +33,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/Text/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/Text/phototest");
 
             // Act
             using (IResultRenderer renderer = rendererFactory.CreateTextRenderer(resultPath))
@@ -57,7 +54,7 @@
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
             // Act
-            string resultPath = TestResultRunFile(@"ResultRenderers/PDF/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/PDF/phototest");
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
                 string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
@@ -82,7 +79,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/PDF/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/PDF/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "pdf");
 
@@ -102,11 +99,11 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/PDF/multi-page");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/PDF/multi-page");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "pdf");
             string examplePixPath = MakeAbsoluteTestFilePath("processing/multi-page.tif");
 
-            
+
             // Act
             using (IResultRenderer renderer = rendererFactory.CreatePdfRenderer(resultPath, DataPath, false))
             {
@@ -129,7 +126,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/PDF/multi-page");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/PDF/multi-page");
             string examplePixPath = MakeAbsoluteTestFilePath("processing/multi-page.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "pdf");
 
@@ -150,7 +147,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/HOCR/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/HOCR/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "hocr");
 
@@ -171,7 +168,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/UNLV/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/UNLV/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "unlv");
 
@@ -192,7 +189,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/Alto/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/Alto/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "xml");
 
@@ -213,7 +210,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/Tsv/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/Tsv/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "tsv");
 
@@ -234,12 +231,12 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/LSTMBox/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/LSTMBox/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "box");
 
             // Arrange
-            using (IResultRenderer renderer = rendererFactory.CreateLSTMBoxRenderer(resultPath))
+            using (IResultRenderer renderer = rendererFactory.CreateLstmBoxRenderer(resultPath))
             {
                 this.ProcessFileActAssertHelper(renderer.AsDocumentRenderer(), examplePixPath);
             }
@@ -255,7 +252,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/WordStrBox/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/WordStrBox/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "box");
 
@@ -276,7 +273,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/Box/phototest");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/Box/phototest");
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
             string expectedOutputFilename = Path.ChangeExtension(resultPath, "box");
 
@@ -298,8 +295,8 @@
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
             string examplePixPath = MakeAbsoluteTestFilePath("Ocr/phototest.tif");
-            string resultPath = TestResultRunFile(@"ResultRenderers/PDF/phototest");
-            var formats = new List<RenderedFormat> { RenderedFormat.HOCR, RenderedFormat.PDF_TEXTONLY, RenderedFormat.TEXT };
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/PDF/phototest");
+            var formats = new List<RenderedFormat> { RenderedFormat.Hocr, RenderedFormat.PdfTextOnly, RenderedFormat.Text };
 
             string expectedPdfOutputFilename = Path.ChangeExtension(resultPath, "pdf");
             string expectedHocrOutputFilename = Path.ChangeExtension(resultPath, "hocr");
@@ -325,7 +322,7 @@
             // Arrange
             var rendererFactory = (this.provider ?? throw new InvalidOperationException()).GetRequiredService<IResultRendererFactory>();
 
-            string resultPath = TestResultRunFile(@"ResultRenderers/Aggregate/multi-page");
+            string resultPath = this.TestResultRunFile(@"ResultRenderers/Aggregate/multi-page");
             string examplePixPath = MakeAbsoluteTestFilePath("processing/multi-page.tif");
 
             string expectedPdfOutputFilename = Path.ChangeExtension(resultPath, "pdf");
@@ -335,7 +332,7 @@
             IResultRenderer textRenderer = rendererFactory.CreateTextRenderer(resultPath);
 
             // Act
-            using (var renderer = new AggregateResultRenderer(new []{pdfRenderer, textRenderer}))
+            using (var renderer = new AggregateResultRenderer(new[] { pdfRenderer, textRenderer }))
             {
                 this.ProcessMultipageTiff(renderer, examplePixPath);
             }
@@ -359,8 +356,8 @@
 
             // Act
             int expectedPageNumber = -1;
-            using Rendering.Document document = renderer.BeginDocument(imageName);
-            
+            using Document document = renderer.BeginDocument(imageName);
+
             Assert.AreEqual(document.NumPages, expectedPageNumber);
             foreach (Pix pix in pixA)
             {
@@ -372,7 +369,7 @@
                 Assert.That(addedPage, Is.True);
                 Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
             }
-                
+
             Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
         }
 
@@ -408,23 +405,24 @@
 
             string imageName = Path.GetFileNameWithoutExtension(filename);
             using PixArray pixA = this.ReadImageFileIntoPixArray(filename);
+
             int expectedPageNumber = -1;
-            using (Document document = renderer.BeginDocument(imageName))
+
+            using Document document = renderer.BeginDocument(imageName);
+            Assert.AreEqual(document.NumPages, expectedPageNumber);
+            foreach (Pix pix in pixA)
             {
-                Assert.AreEqual(document.NumPages, expectedPageNumber);
-                foreach (Pix pix in pixA)
-                {
-                    using Page? page = engine?.Process(pix, imageName);
-                    bool addedPage = document.AddPage(page);
-                    expectedPageNumber++;
+                using Page? page = engine?.Process(pix, imageName);
+                if (page == null) continue;
+                bool addedPage = document.AddPage(page);
+                expectedPageNumber++;
 
-                    // Assert
-                    Assert.That(addedPage, Is.True);
-                    Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
-                }
-
+                // Assert
+                Assert.That(addedPage, Is.True);
                 Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
             }
+
+            Assert.That(document.NumPages, Is.EqualTo(expectedPageNumber));
         }
 
         private PixArray ReadImageFileIntoPixArray(string filename)

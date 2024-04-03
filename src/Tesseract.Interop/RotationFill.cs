@@ -1,9 +1,12 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Interop
 {
-	/// <summary>
-	///     What colour pixels should be used for the outside?
-	/// </summary>
-	public enum RotationFill
+    using System.Diagnostics.CodeAnalysis;
+
+    /// <summary>
+    ///     What colour pixels should be used for the outside?
+    /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public enum RotationFill
     {
 	    /// <summary>
 	    ///     Bring in white pixels from the outside.

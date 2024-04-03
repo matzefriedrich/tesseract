@@ -3,7 +3,6 @@
     using System;
     using System.Drawing;
     using System.Drawing.Imaging;
-
     using Abstractions;
 
     internal sealed class PixToBitmapConverter : IPixToBitmapConverter
@@ -13,19 +12,17 @@
             PixelFormat pixelFormat = this.GetPixelFormat(pix);
             int depth = pix.Depth;
             var img = new Bitmap(pix.Width, pix.Height, pixelFormat);
-            if (pix.XRes > 1 && pix.YRes > 1) img.SetResolution(pix.XRes, pix.YRes);
+            if (pix is { XRes: > 1, YRes: > 1 }) img.SetResolution(pix.XRes, pix.YRes);
 
-            BitmapData imgData = null;
-            PixData pixData = null;
+            BitmapData? imgData = null;
             try
             {
                 // TODO: Set X and Y resolution
 
-                // transfer pixel data
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                 if ((pixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed) this.TransferPalette(pix, img);
 
-                // transfer data
-                pixData = pix.GetData();
+                PixData pixData = pix.GetData();
                 imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.WriteOnly, pixelFormat);
 
                 if (depth == 32)
@@ -50,7 +47,6 @@
 
         private unsafe void TransferData32(PixData pixData, BitmapData imgData, int alphaMask)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width;
 
@@ -74,7 +70,6 @@
 
         private unsafe void TransferData16(PixData pixData, BitmapData imgData)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width;
 
@@ -94,7 +89,6 @@
 
         private unsafe void TransferData8(PixData pixData, BitmapData imgData)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width;
 
@@ -114,7 +108,6 @@
 
         private unsafe void TransferData1(PixData pixData, BitmapData imgData)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width / 8;
 
@@ -134,26 +127,26 @@
 
         private void TransferPalette(Pix pix, Bitmap img)
         {
-            ColorPalette pallete = img.Palette;
-            int maxColors = pallete.Entries.Length;
+            ColorPalette palette = img.Palette;
+            int maxColors = palette.Entries.Length;
             int lastColor = maxColors - 1;
-            PixColormap colormap = pix.Colormap;
+            PixColormap? colormap = pix.Colormap;
             if (colormap != null && colormap.Count <= maxColors)
             {
                 int colormapCount = colormap.Count;
-                for (var i = 0; i < colormapCount; i++) pallete.Entries[i] = colormap[i].ToColor();
+                for (var i = 0; i < colormapCount; i++) palette.Entries[i] = colormap[i].ToColor();
             }
             else
             {
                 for (var i = 0; i < maxColors; i++)
                 {
                     var value = (byte)(i * 255 / lastColor);
-                    pallete.Entries[i] = Color.FromArgb(value, value, value);
+                    palette.Entries[i] = Color.FromArgb(value, value, value);
                 }
             }
 
             // This is required to force the palette to update!
-            img.Palette = pallete;
+            img.Palette = palette;
         }
 
         private PixelFormat GetPixelFormat(Pix pix)

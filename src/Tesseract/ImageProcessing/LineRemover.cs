@@ -4,25 +4,22 @@
     using System.Runtime.InteropServices;
     using Abstractions;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
+    using Resources;
+    using Tesseract.Abstractions;
 
-    public class LineRemover
+    public class LineRemover : ILineRemover
     {
         public const float Deg2Rad = (float)(Math.PI / 180.0);
 
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        public LineRemover([NotNull] ILeptonicaApiSignatures leptonicaApi)
+        public LineRemover(ILeptonicaApiSignatures leptonicaApi)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
         }
 
-        /// <summary>
-        ///     Removes horizontal lines from a grayscale image. The algorithm is based on Leptonica <code>lineremoval.c</code>
-        ///     example. See <a href="http://www.leptonica.com/line-removal.html">line-removal</a>.
-        /// </summary>
-        /// <returns>image with lines removed</returns>
-        public Pix RemoveHorizontalLines([NotNull] Pix source)
+        /// <inheritdoc />
+        public Pix RemoveHorizontalLines(Pix source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -64,7 +61,7 @@
                 pix9 = this.leptonicaApi.pixOpenGray(new HandleRef(this, pix8), 1, 9);
 
                 this.leptonicaApi.pixCombineMasked(new HandleRef(this, pix8), new HandleRef(this, pix9), new HandleRef(this, pix7));
-                if (pix8 == IntPtr.Zero) throw new TesseractException("Failed to remove lines from image.");
+                if (pix8 == IntPtr.Zero) throw new TesseractException(Resources.LineRemover_RemoveHorizontalLines_Failed_to_remove_lines_from_image_);
 
                 return new Pix(this.leptonicaApi, pix8);
             }

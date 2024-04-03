@@ -1,9 +1,7 @@
 ﻿namespace Tesseract.Tests.Leptonica.PixTests
 {
     using Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]
@@ -57,8 +55,8 @@
                     }
                     else if (depth == 2)
                     {
-                        PixData.SetDataDIBit(line, x, val);
-                        readVal = PixData.GetDataDIBit(line, x);
+                        PixData.SetDataDiBit(line, x, val);
+                        readVal = PixData.GetDataDiBit(line, x);
                     }
                     else if (depth == 4)
                     {

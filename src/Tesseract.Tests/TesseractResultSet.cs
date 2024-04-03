@@ -1,7 +1,6 @@
 ﻿namespace Tesseract.Tests
 {
     using System.Runtime.Serialization;
-
     using Abstractions;
 
     [DataContract]

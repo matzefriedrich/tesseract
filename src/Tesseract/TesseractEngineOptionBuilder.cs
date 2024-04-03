@@ -2,10 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-
     using Abstractions;
-
-    using JetBrains.Annotations;
 
     public sealed class TesseractEngineOptionBuilder
     {
@@ -16,10 +13,10 @@
         private readonly IDictionary<string, object> options = new Dictionary<string, object>();
         private readonly bool setOnlyNonDebugVariables;
 
-        public TesseractEngineOptionBuilder([NotNull] string dataPath, [NotNull] string language = "eng", EngineMode mode = EngineMode.Default, bool setOnlyNonDebugVariables = false)
+        public TesseractEngineOptionBuilder(string dataPath, string language = "eng", EngineMode mode = EngineMode.Default, bool setOnlyNonDebugVariables = false)
         {
-            if (string.IsNullOrWhiteSpace(dataPath)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(dataPath));
-            if (string.IsNullOrWhiteSpace(language)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(language));
+            if (string.IsNullOrWhiteSpace(dataPath)) throw new ArgumentException(Resources.Resources.Value_cannot_be_null_or_whitespace, nameof(dataPath));
+            if (string.IsNullOrWhiteSpace(language)) throw new ArgumentException(Resources.Resources.Value_cannot_be_null_or_whitespace, nameof(language));
 
             this.dataPath = dataPath;
             this.language = language;
@@ -27,21 +24,21 @@
             this.setOnlyNonDebugVariables = setOnlyNonDebugVariables;
         }
 
-        public TesseractEngineOptionBuilder WithConfigFile([NotNull] string file)
+        public TesseractEngineOptionBuilder WithConfigFile(string file)
         {
-            if (string.IsNullOrWhiteSpace(file)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(file));
+            if (string.IsNullOrWhiteSpace(file)) throw new ArgumentException(Resources.Resources.Value_cannot_be_null_or_whitespace, nameof(file));
             this.configFiles.Add(file);
             return this;
         }
 
-        public TesseractEngineOptionBuilder WithConfigFiles([NotNull] IEnumerable<string> files)
+        public TesseractEngineOptionBuilder WithConfigFiles(IEnumerable<string> files)
         {
             ArgumentNullException.ThrowIfNull(files);
             this.configFiles.AddRange(files);
             return this;
         }
 
-        public TesseractEngineOptionBuilder WithInitialOptions([NotNull] IDictionary<string, object> dict)
+        public TesseractEngineOptionBuilder WithInitialOptions(IDictionary<string, object> dict)
         {
             ArgumentNullException.ThrowIfNull(dict);
             foreach (KeyValuePair<string, object> pair in dict) this.options[pair.Key] = pair.Value;

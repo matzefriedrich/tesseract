@@ -1,9 +1,9 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Interop
 {
-	/// <summary>
-	///     Determines how <see cref="Pix" /> of a <see cref="PixArray" /> structure are accessed.
-	/// </summary>
-	public enum PixArrayAccessType
+    using System.Diagnostics.CodeAnalysis;
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public enum PixArrayAccessType
     {
 	    /// <summary>
 	    ///     Stuff it in; no copy, clone or copy-clone.

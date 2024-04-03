@@ -9,7 +9,7 @@
     {
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        private PixColormap colormap;
+        private PixColormap? colormap;
         private HandleRef handle;
 
         /// <summary>
@@ -39,7 +39,7 @@
             if (colorMapHandle != IntPtr.Zero) this.colormap = new PixColormap(this.leptonicaApi, colorMapHandle);
         }
 
-        public PixColormap Colormap
+        public PixColormap? Colormap
         {
             get => this.colormap;
             set
@@ -75,13 +75,13 @@
 
         internal HandleRef Handle => this.handle;
 
-        public bool Equals(Pix other)
+        public bool Equals(Pix? other)
         {
             if (other == null) return false;
 
             int pixEqual = this.leptonicaApi.pixEqual(this.Handle, other.Handle, out int same);
             if (pixEqual != 0)
-                throw new TesseractException("Failed to compare pix");
+                throw new TesseractException(Resources.Resources.Pix_Equals_Failed_to_compare_pix);
 
             return same != 0;
         }
@@ -99,7 +99,7 @@
                 this.leptonicaApi.pixDestroy(ref tmpHandle);
                 this.handle = new HandleRef(this, IntPtr.Zero);
             }
-            
+
             base.Dispose(disposing);
         }
 
@@ -108,7 +108,7 @@
             return new PixData(this.leptonicaApi, this);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             // Check for null values and compare run-time types.
             if (obj == null || this.GetType() != obj.GetType())

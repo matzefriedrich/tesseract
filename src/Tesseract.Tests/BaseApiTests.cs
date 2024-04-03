@@ -1,9 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
     using Interop.Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]

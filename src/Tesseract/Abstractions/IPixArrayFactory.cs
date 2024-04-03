@@ -1,7 +1,5 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Abstractions
 {
-    using JetBrains.Annotations;
-
     public interface IPixArrayFactory
     {
         /// <summary>
@@ -9,7 +7,7 @@
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        PixArray LoadMultiPageTiffFromFile([NotNull] string filename);
+        PixArray LoadMultiPageTiffFromFile(string filename);
 
         PixArray Create(int n);
     }

@@ -1,9 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
     using Abstractions;
-
     using Moq;
-
     using NUnit.Framework;
 
     [TestFixture]
@@ -43,7 +41,7 @@
                 // Act
                 sut.Dispose();
             }
-            
+
             // Assert
             eventSinkMock.Verify(sink => sink.Dispose(), Times.Once);
             Assert.AreEqual(expectedTotalEvents, eventHandler.TotalEvents, "The Dispose event was not raised on the target object.");
@@ -52,7 +50,7 @@
         private sealed class DisposeHandler
         {
             private int counter;
-            
+
             public DisposeHandler(DisposableBase target)
             {
                 target.Disposed += this.HandleDispose;

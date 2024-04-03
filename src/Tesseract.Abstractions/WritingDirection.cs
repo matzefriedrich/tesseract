@@ -1,10 +1,13 @@
 ﻿namespace Tesseract.Abstractions
 {
-	/// <summary>
-	///     The grapheme cluster within a line of text are laid out logically in this direction,
-	///     judged when looking at the text line rotated so that Orientation is "page up".
-	/// </summary>
-	public enum WritingDirection
+    using System.Diagnostics.CodeAnalysis;
+
+    /// <summary>
+    ///     The grapheme cluster within a line of text are laid out logically in this direction,
+    ///     judged when looking at the text line rotated so that Orientation is "page up".
+    /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public enum WritingDirection
     {
 	    /// <summary>
 	    ///     The text line from the left hand side to the right hand side when the page is rotated so it's orientation is

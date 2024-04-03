@@ -33,35 +33,35 @@
         <Compile Include="..\Tesseract.Tests\Leptonica\LeptonicaPerformanceTests.cs" Link="Leptonica\LeptonicaPerformanceTests.cs"/>
         <Compile Include="..\Tesseract.Tests\Leptonica\LoadFromFileTests.cs" Link="Leptonica\LoadFromFileTests.cs"/>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixArrayFactoryTests.cs">
-          <Link>Leptonica\PixArrayFactoryTests.cs</Link>
+            <Link>Leptonica\PixArrayFactoryTests.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixArrayTests.cs">
-          <Link>Leptonica\PixArrayTests.cs</Link>
+            <Link>Leptonica\PixArrayTests.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageBinarizerTest.cs">
-          <Link>Leptonica\PixTests\ImageBinarizerTest.cs</Link>
+            <Link>Leptonica\PixTests\ImageBinarizerTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\SkewCorrectorTest.cs">
-          <Link>Leptonica\PixTests\SkewCorrectorTest.cs</Link>
+            <Link>Leptonica\PixTests\SkewCorrectorTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\NoiseRemoverTest.cs">
-          <Link>Leptonica\PixTests\NoiseRemoverTest.cs</Link>
+            <Link>Leptonica\PixTests\NoiseRemoverTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\GrayscaleConverterTest.cs">
-          <Link>Leptonica\PixTests\GrayscaleConverterTest.cs</Link>
+            <Link>Leptonica\PixTests\GrayscaleConverterTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\LineRemoverTest.cs">
-          <Link>Leptonica\PixTests\LineRemoverTest.cs</Link>
+            <Link>Leptonica\PixTests\LineRemoverTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\PixDataAccessTests.cs" Link="Leptonica\PixTests\PixDataAccessTests.cs"/>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageRotatorTest.cs">
-          <Link>Leptonica\PixTests\ImageRotatorTest.cs</Link>
+            <Link>Leptonica\PixTests\ImageRotatorTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\ImageScalerTest.cs">
-          <Link>Leptonica\PixTests\ImageScalerTest.cs</Link>
+            <Link>Leptonica\PixTests\ImageScalerTest.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\Leptonica\PixTests\TestResultExtensions.cs">
-          <Link>Leptonica\PixTests\TestResultExtensions.cs</Link>
+            <Link>Leptonica\PixTests\TestResultExtensions.cs</Link>
         </Compile>
         <Compile Include="..\Tesseract.Tests\ResultIteratorTests\FontAttributesTests.cs" Link="ResultIteratorTests\FontAttributesTests.cs"/>
         <Compile Include="..\Tesseract.Tests\ResultIteratorTests\OfAnEmptyPixTests.cs" Link="ResultIteratorTests\OfAnEmptyPixTests.cs"/>
@@ -75,8 +75,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="Moq" Version="4.20.70" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageReference Include="Moq" Version="4.20.70"/>
         <PackageReference Include="nunit" Version="3.13.3"/>
         <PackageReference Include="NUnit3TestAdapter" Version="4.3.0">
             <PrivateAssets>all</PrivateAssets>

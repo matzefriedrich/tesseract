@@ -5,15 +5,15 @@ namespace Tesseract.Abstractions
     /// </summary>
     public enum RenderedFormat
     {
-        TEXT,
-        HOCR,
-        PDF,
-        PDF_TEXTONLY,
-        UNLV,
-        BOX,
-        ALTO,
-        TSV,
-        LSTMBOX,
-        WORDSTRBOX
+        Text,
+        Hocr,
+        Pdf,
+        PdfTextOnly,
+        Unlv,
+        Box,
+        Alto,
+        Tsv,
+        LstmBox,
+        WordStrBox
     }
 }

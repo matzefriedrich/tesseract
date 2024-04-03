@@ -3,27 +3,24 @@
     using System;
     using System.Drawing;
     using System.Drawing.Imaging;
-
     using Abstractions;
-
-    using JetBrains.Annotations;
 
     /// <summary>
     ///     Converts a <see cref="Bitmap" /> to a <see cref="Pix" />.
     /// </summary>
     internal sealed class BitmapToPixConverter : IBitmapToPixConverter
     {
-        private readonly IPixFactory pixFactory;
         private readonly IPixColorMapFactory pixColorMapFactory;
+        private readonly IPixFactory pixFactory;
 
         public BitmapToPixConverter(
-            [NotNull] IPixFactory pixFactory,
-            [NotNull] IPixColorMapFactory pixColorMapFactory)
+            IPixFactory pixFactory,
+            IPixColorMapFactory pixColorMapFactory)
         {
             this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
             this.pixColorMapFactory = pixColorMapFactory ?? throw new ArgumentNullException(nameof(pixColorMapFactory));
         }
-        
+
         /// <summary>
         ///     Converts the specified <paramref name="img" /> to a <see cref="Pix" />.
         /// </summary>
@@ -36,11 +33,12 @@
             pix.XRes = (int)Math.Round(img.HorizontalResolution);
             pix.YRes = (int)Math.Round(img.VerticalResolution);
 
-            BitmapData imgData = null;
+            BitmapData? imgData = null;
             try
             {
                 // TODO: Set X and Y resolution
 
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                 if ((img.PixelFormat & PixelFormat.Indexed) == PixelFormat.Indexed) this.CopyColormap(img, pix);
 
                 // transfer data
@@ -48,14 +46,14 @@
                 PixData pixData = pix.GetData();
 
                 if (imgData.PixelFormat == PixelFormat.Format32bppArgb)
-                    this.TransferDataFormat32bppArgb(imgData, pixData);
+                    TransferDataFormat32BppArgb(imgData, pixData);
                 else if (imgData.PixelFormat == PixelFormat.Format32bppRgb)
-                    this.TransferDataFormat32bppRgb(imgData, pixData);
+                    TransferDataFormat32BppRgb(imgData, pixData);
                 else if (imgData.PixelFormat == PixelFormat.Format24bppRgb)
-                    this.TransferDataFormat24bppRgb(imgData, pixData);
+                    TransferDataFormat24BppRgb(imgData, pixData);
                 else if (imgData.PixelFormat == PixelFormat.Format8bppIndexed)
-                    this.TransferDataFormat8bppIndexed(imgData, pixData);
-                else if (imgData.PixelFormat == PixelFormat.Format1bppIndexed) this.TransferDataFormat1bppIndexed(imgData, pixData);
+                    TransferDataFormat8BppIndexed(imgData, pixData);
+                else if (imgData.PixelFormat == PixelFormat.Format1bppIndexed) TransferDataFormat1BppIndexed(imgData, pixData);
                 return pix;
             }
             catch (Exception)
@@ -111,7 +109,7 @@
             }
         }
 
-        private unsafe void TransferDataFormat1bppIndexed(BitmapData imgData, PixData pixData)
+        private static unsafe void TransferDataFormat1BppIndexed(BitmapData imgData, PixData pixData)
         {
             int height = imgData.Height;
             int width = imgData.Width / 8;
@@ -128,9 +126,8 @@
             }
         }
 
-        private unsafe void TransferDataFormat24bppRgb(BitmapData imgData, PixData pixData)
+        private static unsafe void TransferDataFormat24BppRgb(BitmapData imgData, PixData pixData)
         {
-            PixelFormat imgFormat = imgData.PixelFormat;
             int height = imgData.Height;
             int width = imgData.Width;
 
@@ -145,12 +142,12 @@
                     byte blue = pixelPtr[0];
                     byte green = pixelPtr[1];
                     byte red = pixelPtr[2];
-                    PixData.SetDataFourByte(pixLine, x, BitmapHelper.EncodeAsRGBA(red, green, blue, 255));
+                    PixData.SetDataFourByte(pixLine, x, BitmapHelper.EncodeAsRgba(red, green, blue, 255));
                 }
             }
         }
 
-        private unsafe void TransferDataFormat32bppRgb(BitmapData imgData, PixData pixData)
+        private static unsafe void TransferDataFormat32BppRgb(BitmapData imgData, PixData pixData)
         {
             int height = imgData.Height;
             int width = imgData.Width;
@@ -166,12 +163,12 @@
                     byte blue = *pixelPtr;
                     byte green = *(pixelPtr + 1);
                     byte red = *(pixelPtr + 2);
-                    PixData.SetDataFourByte(pixLine, x, BitmapHelper.EncodeAsRGBA(red, green, blue, 255));
+                    PixData.SetDataFourByte(pixLine, x, BitmapHelper.EncodeAsRgba(red, green, blue, 255));
                 }
             }
         }
 
-        private unsafe void TransferDataFormat32bppArgb(BitmapData imgData, PixData pixData)
+        private static unsafe void TransferDataFormat32BppArgb(BitmapData imgData, PixData pixData)
         {
             int height = imgData.Height;
             int width = imgData.Width;
@@ -188,12 +185,12 @@
                     byte green = *(pixelPtr + 1);
                     byte red = *(pixelPtr + 2);
                     byte alpha = *(pixelPtr + 3);
-                    PixData.SetDataFourByte(pixLine, x, BitmapHelper.EncodeAsRGBA(red, green, blue, alpha));
+                    PixData.SetDataFourByte(pixLine, x, BitmapHelper.EncodeAsRgba(red, green, blue, alpha));
                 }
             }
         }
 
-        private unsafe void TransferDataFormat8bppIndexed(BitmapData imgData, PixData pixData)
+        private static unsafe void TransferDataFormat8BppIndexed(BitmapData imgData, PixData pixData)
         {
             int height = imgData.Height;
             int width = imgData.Width;

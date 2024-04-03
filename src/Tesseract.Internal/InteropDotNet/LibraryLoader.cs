@@ -5,7 +5,6 @@
 namespace InteropDotNet
 {
     using System.Reflection;
-
     using Tesseract.Abstractions;
     using Tesseract.Internal;
 

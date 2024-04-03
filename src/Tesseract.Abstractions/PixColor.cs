@@ -1,12 +1,13 @@
 ﻿namespace Tesseract.Abstractions
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Drawing;
     using System.Runtime.InteropServices;
-
     using JetBrains.Annotations;
 
     [NoReorder]
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public readonly struct PixColor(byte red, byte green, byte blue, byte alpha = 255)
         : IEquatable<PixColor>
     {
@@ -37,7 +38,7 @@
             return new PixColor(red, green, blue);
         }
 
-        public uint ToRGBA()
+        public uint ToRgba()
         {
             return (uint)((this.Red << 24) | (this.Green << 16) | (this.Blue << 8) | this.Alpha);
         }
@@ -79,7 +80,7 @@
 
         public override string ToString()
         {
-            return $"Color(0x{this.ToRGBA():X})";
+            return $"Color(0x{this.ToRgba():X})";
         }
     }
 }

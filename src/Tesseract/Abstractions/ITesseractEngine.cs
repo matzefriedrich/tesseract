@@ -1,10 +1,11 @@
 ﻿namespace Tesseract.Abstractions
 {
     using System;
+    using Interop;
 
     public interface ITesseractEngine : IDisposable
     {
-        string Version { get; }
+        string? Version { get; }
 
         /// <summary>
         ///     Gets or sets default <see cref="PageSegMode" /> mode used by
@@ -56,7 +57,7 @@
         /// <param name="region">The image region to process.</param>
         /// <param name="pageSegMode">The page layout analyasis method to use.</param>
         /// <returns>A result iterator</returns>
-        Page Process(Pix image, string inputName, Rect region, PageSegMode? pageSegMode = null);
+        Page Process(Pix image, string? inputName, Rect region, PageSegMode? pageSegMode = null);
 
         bool SetDebugVariable(string name, string value);
 
@@ -122,7 +123,7 @@
         /// <param name="name">The name of the variable.</param>
         /// <param name="value">The current value of the variable.</param>
         /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
-        bool TryGetStringVariable(string name, out string value);
+        bool TryGetStringVariable(string name, out string? value);
 
         /// <summary>
         ///     Attempts to print the variables to the file.

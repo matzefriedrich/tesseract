@@ -1,16 +1,16 @@
 ﻿namespace Tesseract.Interop
 {
+    using System.Diagnostics.CodeAnalysis;
     using Abstractions;
-
     using InteropDotNet;
-
     using Microsoft.Extensions.DependencyInjection;
 
+    [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
     public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddLeptonicaApi(this IServiceCollection services)
         {
-            if (services == null) throw new ArgumentNullException(nameof(services));
+            ArgumentNullException.ThrowIfNull(services);
 
             services.AddSingleton<ILeptonicaApiSignatures>(_ =>
             {
@@ -23,7 +23,7 @@
 
         public static IServiceCollection AddTesseractApi(this IServiceCollection services)
         {
-            if (services == null) throw new ArgumentNullException(nameof(services));
+            ArgumentNullException.ThrowIfNull(services);
 
             services.AddTransient<IManagedTesseractApi, TessApi>();
             services.AddSingleton<ITessApiSignatures>(_ =>

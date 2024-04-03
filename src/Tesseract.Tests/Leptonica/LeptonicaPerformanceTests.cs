@@ -2,11 +2,8 @@
 {
     using System.Diagnostics;
     using System.Drawing;
-
     using Abstractions;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]

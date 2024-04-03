@@ -1,5 +1,8 @@
 ﻿namespace Tesseract.Interop.Abstractions
 {
+    using System.Diagnostics.CodeAnalysis;
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum ImageFormat
     {
         Unknown = 0,

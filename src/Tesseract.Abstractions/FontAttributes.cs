@@ -1,25 +1,18 @@
 namespace Tesseract.Abstractions
 {
-    /// <remarks>
-    ///     This class is the return type of <see cref="ResultIterator.GetWordFontAttributes" />.  We can't use FontInfo
-    ///     directly because there are properties here that are not accounted for in <see cref="FontInfo" /> (small-caps,
-    ///     underline, etc.) Because of the caching scheme we're using for <see cref="FontInfo" /> objects, we can't simply
-    ///     augment that class since these extra properties are not accounted for by the FontInfo's unique ID.
-    /// </remarks>
-    public class FontAttributes
+    using System.Diagnostics.CodeAnalysis;
+
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public class FontAttributes(
+        FontInfo fontInfo,
+        bool isUnderlined,
+        bool isSmallCaps,
+        int pointSize)
     {
-        public FontAttributes(FontInfo fontInfo, bool isUnderlined, bool isSmallCaps, int pointSize)
-        {
-            this.FontInfo = fontInfo;
-            this.IsUnderlined = isUnderlined;
-            this.IsSmallCaps = isSmallCaps;
-            this.PointSize = pointSize;
-        }
-
-        public FontInfo FontInfo { get; private set; }
-
-        public bool IsUnderlined { get; private set; }
-        public bool IsSmallCaps { get; private set; }
-        public int PointSize { get; private set; }
+        public FontInfo FontInfo { get; private set; } = fontInfo ?? throw new ArgumentNullException(nameof(fontInfo));
+        public bool IsUnderlined { get; private set; } = isUnderlined;
+        public bool IsSmallCaps { get; private set; } = isSmallCaps;
+        public int PointSize { get; private set; } = pointSize;
     }
 }

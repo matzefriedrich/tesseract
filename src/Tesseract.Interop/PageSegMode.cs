@@ -1,8 +1,11 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Interop
 {
+    using System.Diagnostics.CodeAnalysis;
+
     /// <summary>
-    ///     Represents the possible page layou analysis modes.
+    ///     Represents the possible page layout analysis modes.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public enum PageSegMode
     {
         /// <summary>
@@ -11,7 +14,7 @@
         OsdOnly = 0,
 
         /// <summary>
-        ///     Automatic page sementation with orientantion and script detection (OSD).
+        ///     Automatic page segmentation with orientation and script detection (OSD).
         /// </summary>
         AutoOsd = 1,
 
@@ -60,7 +63,6 @@
         /// </summary>
         SingleChar = 10,
 
-        /// <summary>
         SparseText = 11,
 
         /// <summary>

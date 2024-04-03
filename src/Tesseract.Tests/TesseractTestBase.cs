@@ -56,7 +56,7 @@
 
             testDifferenceHandler.Execute(actualResultFilename, expectedResultFilename);
         }
-        
+
         protected void AssertXDocumentsAreEqual(string resultFilename)
         {
             string actualResultFilename = this.TestResultRunFile(resultFilename);

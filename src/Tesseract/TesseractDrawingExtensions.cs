@@ -3,12 +3,11 @@
     using System;
     using System.Drawing;
     using System.Drawing.Imaging;
-
+    using System.Globalization;
     using Abstractions;
 
     public static class TesseractDrawingExtensions
     {
-
         public static Color ToColor(this PixColor color)
         {
             return Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
@@ -24,7 +23,7 @@
         /// </summary>
         /// <param name="bitmap"></param>
         /// <returns></returns>
-        public static int GetBPP(this Bitmap bitmap)
+        public static int GetBpp(this Bitmap bitmap)
         {
             switch (bitmap.PixelFormat)
             {
@@ -42,7 +41,7 @@
                 case PixelFormat.Format48bppRgb: return 48;
                 case PixelFormat.Format64bppArgb:
                 case PixelFormat.Format64bppPArgb: return 64;
-                default: throw new ArgumentException($"The bitmap's pixel format of {bitmap.PixelFormat} was not recognised.", nameof(bitmap));
+                default: throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Resources.TesseractDrawingExtensions_GetBpp_The_bitmap_s_pixel_format_of__0__was_not_recognised_, bitmap.PixelFormat), nameof(bitmap));
             }
         }
     }

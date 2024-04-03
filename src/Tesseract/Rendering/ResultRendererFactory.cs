@@ -1,22 +1,16 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Rendering
 {
     using System;
     using System.Collections.Generic;
-
-    using Abstractions;
-
-    using Interop.Abstractions;
-
-    using JetBrains.Annotations;
-
-    using Rendering;
-    using Rendering.Abstractions;
+    using Tesseract.Abstractions;
+    using Tesseract.Interop.Abstractions;
+    using Tesseract.Rendering.Abstractions;
 
     public sealed class ResultRendererFactory : IResultRendererFactory
     {
         private readonly ITessApiSignatures native;
 
-        public ResultRendererFactory([NotNull] ITessApiSignatures native)
+        public ResultRendererFactory(ITessApiSignatures native)
         {
             this.native = native ?? throw new ArgumentNullException(nameof(native));
         }
@@ -24,49 +18,51 @@
         /// <summary>
         ///     Creates renderers for specified output formats.
         /// </summary>
-        /// <param name="outputbase"></param>
+        /// <param name="outputBase"></param>
         /// <param name="dataPath">The directory containing the pdf font data, normally same as your tessdata directory.</param>
         /// <param name="outputFormats"></param>
         /// <returns></returns>
-        public IEnumerable<IResultRenderer> CreateRenderers(string outputbase, string dataPath, List<RenderedFormat> outputFormats)
+        public IEnumerable<IResultRenderer> CreateRenderers(string outputBase, string dataPath, List<RenderedFormat> outputFormats)
         {
             var renderers = new List<IResultRenderer>();
 
             foreach (RenderedFormat format in outputFormats)
             {
-                IResultRenderer renderer = null;
+                IResultRenderer renderer;
 
                 switch (format)
                 {
-                    case RenderedFormat.TEXT:
-                        renderer = this.CreateTextRenderer(outputbase);
+                    case RenderedFormat.Text:
+                        renderer = this.CreateTextRenderer(outputBase);
                         break;
-                    case RenderedFormat.HOCR:
-                        renderer = this.CreateHOcrRenderer(outputbase);
+                    case RenderedFormat.Hocr:
+                        renderer = this.CreateHOcrRenderer(outputBase);
                         break;
-                    case RenderedFormat.PDF:
-                    case RenderedFormat.PDF_TEXTONLY:
-                        bool textonly = format == RenderedFormat.PDF_TEXTONLY;
-                        renderer = this.CreatePdfRenderer(outputbase, dataPath, textonly);
+                    case RenderedFormat.Pdf:
+                    case RenderedFormat.PdfTextOnly:
+                        bool textOnly = format == RenderedFormat.PdfTextOnly;
+                        renderer = this.CreatePdfRenderer(outputBase, dataPath, textOnly);
                         break;
-                    case RenderedFormat.BOX:
-                        renderer = this.CreateBoxRenderer(outputbase);
+                    case RenderedFormat.Box:
+                        renderer = this.CreateBoxRenderer(outputBase);
                         break;
-                    case RenderedFormat.UNLV:
-                        renderer = this.CreateUnlvRenderer(outputbase);
+                    case RenderedFormat.Unlv:
+                        renderer = this.CreateUnlvRenderer(outputBase);
                         break;
-                    case RenderedFormat.ALTO:
-                        renderer = this.CreateAltoRenderer(outputbase);
+                    case RenderedFormat.Alto:
+                        renderer = this.CreateAltoRenderer(outputBase);
                         break;
-                    case RenderedFormat.TSV:
-                        renderer = this.CreateTsvRenderer(outputbase);
+                    case RenderedFormat.Tsv:
+                        renderer = this.CreateTsvRenderer(outputBase);
                         break;
-                    case RenderedFormat.LSTMBOX:
-                        renderer = this.CreateLSTMBoxRenderer(outputbase);
+                    case RenderedFormat.LstmBox:
+                        renderer = this.CreateLstmBoxRenderer(outputBase);
                         break;
-                    case RenderedFormat.WORDSTRBOX:
-                        renderer = this.CreateWordStrBoxRenderer(outputbase);
+                    case RenderedFormat.WordStrBox:
+                        renderer = this.CreateWordStrBoxRenderer(outputBase);
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(outputFormats));
                 }
 
                 renderers.Add(renderer);
@@ -77,15 +73,15 @@
 
         /// <summary>
         ///     Creates a <see cref="IResultRenderer">result renderer</see> that render that generates a searchable
-        ///     pdf file from tesseract's output.
+        ///     pdf file from tesseract output.
         /// </summary>
         /// <param name="outputFilename">The filename of the pdf file to be generated without the file extension.</param>
         /// <param name="fontDirectory">The directory containing the pdf font data, normally same as your tessdata directory.</param>
-        /// <param name="textonly">skip images if set</param>
+        /// <param name="textOnly">skip images if set</param>
         /// <returns></returns>
-        public IResultRenderer CreatePdfRenderer(string outputFilename, string fontDirectory, bool textonly)
+        public IResultRenderer CreatePdfRenderer(string outputFilename, string fontDirectory, bool textOnly)
         {
-            return new PdfResultRenderer(this.native, outputFilename, fontDirectory, textonly);
+            return new PdfResultRenderer(this.native, outputFilename, fontDirectory, textOnly);
         }
 
         /// <summary>
@@ -150,9 +146,9 @@
         /// </summary>
         /// <param name="outputFilename">The path to the unlv file to be created without the file extension.</param>
         /// <returns></returns>
-        public IResultRenderer CreateLSTMBoxRenderer(string outputFilename)
+        public IResultRenderer CreateLstmBoxRenderer(string outputFilename)
         {
-            return new LSTMBoxResultRenderer(this.native, outputFilename);
+            return new LstmBoxResultRenderer(this.native, outputFilename);
         }
 
         /// <summary>

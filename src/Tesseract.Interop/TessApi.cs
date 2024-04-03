@@ -19,14 +19,14 @@
         public string? GetVersion()
         {
             IntPtr versionHandle = this.tesseractApiSignatures.GetVersion();
-            if (versionHandle != IntPtr.Zero) return MarshalHelper.PtrToString(versionHandle, Encoding.UTF8);
-
-            return null;
+            return versionHandle != IntPtr.Zero ? MarshalHelper.PtrToString(versionHandle, Encoding.UTF8) : null;
         }
 
-        public string GetHOCRText(HandleRef handle, int pageNum, HocrTextFormat format)
+        public string? GetHocrText(HandleRef handle, int pageNum, HocrTextFormat format)
         {
             string? result = this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetHOCRTextInternal, handle, pageNum);
+            if (result == null) return null;
+
             switch (format)
             {
                 case HocrTextFormat.Html:
@@ -53,7 +53,7 @@
             return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetBoxTextInternal, handle, pageNum);
         }
 
-        public string? GetLSTMBoxText(HandleRef handle, int pageNum)
+        public string? GetLstmBoxText(HandleRef handle, int pageNum)
         {
             return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetLSTMBoxTextInternal, handle, pageNum);
         }
@@ -63,7 +63,7 @@
             return this.InvokeGetText(this.tesseractApiSignatures.BaseApiGetWordStrBoxTextInternal, handle, pageNum);
         }
 
-        public string? GetUNLVText(HandleRef handle)
+        public string? GetUnlvText(HandleRef handle)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseApiGetUNLVTextInternal(handle);
             if (txtHandle == IntPtr.Zero) return null;
@@ -81,7 +81,7 @@
             return null;
         }
 
-        public string? GetUTF8Text(HandleRef handle)
+        public string? GetUtf8Text(HandleRef handle)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.BaseAPIGetUTF8TextInternal(handle);
             if (txtHandle == IntPtr.Zero) return null;
@@ -95,25 +95,24 @@
         {
             if (handle.Handle == IntPtr.Zero) throw new ArgumentException($"The given handle is invalid. Use {nameof(this.tesseractApiSignatures.BaseApiCreate)} to get one.");
             if (string.IsNullOrWhiteSpace(language)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(language));
-            if (configFiles == null) throw new ArgumentNullException(nameof(configFiles));
-            if (initialValues == null) throw new ArgumentNullException(nameof(initialValues));
+            ArgumentNullException.ThrowIfNull(configFiles);
+            ArgumentNullException.ThrowIfNull(initialValues);
 
             string[] configFilesArray = new List<string>(configFiles).ToArray();
 
             var varNames = new string[initialValues.Count];
             var varValues = new string[initialValues.Count];
             var i = 0;
-            foreach (KeyValuePair<string, object> pair in initialValues)
+            foreach ((string? key, object? value) in initialValues)
             {
-                if (string.IsNullOrWhiteSpace(pair.Key)) throw new ArgumentException("Variable must have a name.");
+                if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Variable must have a name.");
 
-                object? pairValue = pair.Value;
-                if (pairValue == null) throw new ArgumentException($"Variable '{pair.Key}': The type '{pairValue?.GetType()}' is not supported.");
-                varNames[i] = pair.Key;
-                if (TessConvert.TryToString(pairValue, out string? varValue))
+                if (value == null) throw new ArgumentException($"Variable '{key}': The type '{value?.GetType()}' is not supported.");
+                varNames[i] = key;
+                if (value.TryFormatAsString(out string? varValue))
                     varValues[i] = varValue!;
                 else
-                    throw new ArgumentException($"Variable '{pair.Key}': The type '{pairValue.GetType()}' is not supported.", nameof(initialValues));
+                    throw new ArgumentException($"Variable '{key}': The type '{value.GetType()}' is not supported.", nameof(initialValues));
                 i++;
             }
 
@@ -162,7 +161,7 @@
                 : null;
         }
 
-        public string? ResultIteratorGetUTF8Text(HandleRef handle, PageIteratorLevel level)
+        public string? ResultIteratorGetUtf8Text(HandleRef handle, PageIteratorLevel level)
         {
             IntPtr txtHandle = this.tesseractApiSignatures.ResultIteratorGetUTF8TextInternal(handle, level);
             if (txtHandle == IntPtr.Zero) return null;
@@ -181,7 +180,7 @@
         /// </remarks>
         /// <param name="choiceIteratorHandle"></param>
         /// <returns>string</returns>
-        public string? ChoiceIteratorGetUTF8Text(HandleRef choiceIteratorHandle)
+        public string? ChoiceIteratorGetUtf8Text(HandleRef choiceIteratorHandle)
         {
             if (choiceIteratorHandle.Handle == IntPtr.Zero) throw new ArgumentException("Invalid iterator handle.");
             IntPtr txtChoiceHandle = this.tesseractApiSignatures.ChoiceIteratorGetUTF8TextInternal(choiceIteratorHandle);

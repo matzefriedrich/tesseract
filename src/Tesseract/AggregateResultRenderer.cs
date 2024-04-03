@@ -34,7 +34,7 @@
         /// <returns></returns>
         public Document BeginDocument(string title)
         {
-            if (title == null) throw new ArgumentException("Value cannot be null or whitespace.", nameof(title));
+            if (title == null) throw new ArgumentException(Resources.Resources.Value_cannot_be_null_or_whitespace, nameof(title));
 
             this.ThrowIfDisposed();
 

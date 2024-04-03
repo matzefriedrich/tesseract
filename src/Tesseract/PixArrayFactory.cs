@@ -2,12 +2,8 @@
 {
     using System;
     using System.IO;
-
     using Abstractions;
-
     using Interop.Abstractions;
-
-    using JetBrains.Annotations;
 
     public sealed class PixArrayFactory : IPixArrayFactory
     {
@@ -15,8 +11,8 @@
         private readonly IPixFactory pixFactory;
 
         public PixArrayFactory(
-            [NotNull] ILeptonicaApiSignatures leptonicaApi, 
-            [NotNull] IPixFactory pixFactory)
+            ILeptonicaApiSignatures leptonicaApi,
+            IPixFactory pixFactory)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
             this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
@@ -27,9 +23,9 @@
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public PixArray LoadMultiPageTiffFromFile([NotNull] string filename)
+        public PixArray LoadMultiPageTiffFromFile(string filename)
         {
-            if (string.IsNullOrWhiteSpace(filename)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(filename));
+            if (string.IsNullOrWhiteSpace(filename)) throw new ArgumentException(Resources.Resources.Value_cannot_be_null_or_whitespace, nameof(filename));
 
             IntPtr pixaHandle = this.leptonicaApi.pixaReadMultipageTiff(filename);
             if (pixaHandle == IntPtr.Zero) throw new IOException($"Failed to load image '{filename}'.");

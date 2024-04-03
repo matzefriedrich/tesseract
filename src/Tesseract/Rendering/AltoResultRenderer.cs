@@ -2,13 +2,13 @@
 {
     using System;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
+    using Resources;
 
     public sealed class AltoResultRenderer : ResultRenderer
     {
-        public AltoResultRenderer([NotNull] ITessApiSignatures native, [NotNull] string outputFilename) : base(native)
+        public AltoResultRenderer(ITessApiSignatures native, string outputFilename) : base(native)
         {
-            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(outputFilename));
+            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(outputFilename));
             IntPtr handle = native.AltoRendererCreate(outputFilename);
             this.AssignHandle(handle);
         }

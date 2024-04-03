@@ -1,33 +1,26 @@
 ﻿namespace Tesseract.Abstractions
 {
-    public struct Rect : IEquatable<Rect>
+    public readonly struct Rect(int x, int y, int width, int height)
+        : IEquatable<Rect>
     {
         public static readonly Rect Empty = new();
-
-        public Rect(int x, int y, int width, int height)
-        {
-            this.X1 = x;
-            this.Y1 = y;
-            this.Width = width;
-            this.Height = height;
-        }
 
         public static Rect FromCoords(int x1, int y1, int x2, int y2)
         {
             return new Rect(x1, y1, x2 - x1, y2 - y1);
         }
 
-        public int X1 { get; }
+        public int X1 { get; } = x;
 
-        public int Y1 { get; }
+        public int Y1 { get; } = y;
 
         public int X2 => this.X1 + this.Width;
 
         public int Y2 => this.Y1 + this.Height;
 
-        public int Width { get; }
+        public int Width { get; } = width;
 
-        public int Height { get; }
+        public int Height { get; } = height;
 
         public override bool Equals(object? obj)
         {

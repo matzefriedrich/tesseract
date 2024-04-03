@@ -1,9 +1,12 @@
-﻿namespace Tesseract
+﻿namespace Tesseract.Interop
 {
-	/// <summary>
-	///     Represents the method used to rotate an image.
-	/// </summary>
-	public enum RotationMethod
+    using System.Diagnostics.CodeAnalysis;
+
+    /// <summary>
+    ///     Represents the method used to rotate an image.
+    /// </summary>
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public enum RotationMethod
     {
 	    /// <summary>
 	    ///     Use area map rotation, if possible.

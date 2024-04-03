@@ -36,7 +36,7 @@
             {
                 var stack = new Stack<XElement>();
                 stack.Push(e);
-                while (stack.Any())
+                while (stack.Count != 0)
                 {
                     XElement next = stack.Pop();
                     next.Name = ns + next.Name.LocalName;

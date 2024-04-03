@@ -8,7 +8,7 @@
     public static unsafe class BitmapHelper
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ConvertRgb555ToRGBA(uint val)
+        public static uint ConvertRgb555ToRgba(uint val)
         {
             uint red = (val & 0x7C00) >> 10;
             uint green = (val & 0x3E0) >> 5;
@@ -18,7 +18,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ConvertRgb565ToRGBA(uint val)
+        public static uint ConvertRgb565ToRgba(uint val)
         {
             uint red = (val & 0xF800) >> 11;
             uint green = (val & 0x7E0) >> 5;
@@ -28,7 +28,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ConvertArgb1555ToRGBA(uint val)
+        public static uint ConvertArgb1555ToRgba(uint val)
         {
             uint alpha = (val & 0x8000) >> 15;
             uint red = (val & 0x7C00) >> 10;
@@ -39,7 +39,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint EncodeAsRGBA(byte red, byte green, byte blue, byte alpha)
+        public static uint EncodeAsRgba(byte red, byte green, byte blue, byte alpha)
         {
             return (uint)((red << 24) | (green << 16) | (blue << 8) | alpha);
         }

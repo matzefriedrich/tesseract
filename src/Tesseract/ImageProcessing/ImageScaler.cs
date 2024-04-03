@@ -2,13 +2,12 @@
 {
     using System;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
 
     public class ImageScaler
     {
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        public ImageScaler([NotNull] ILeptonicaApiSignatures leptonicaApi)
+        public ImageScaler(ILeptonicaApiSignatures leptonicaApi)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
         }
@@ -17,6 +16,7 @@
         ///     Scales the current pix by the specified <paramref name="scaleX" /> and <paramref name="scaleY" /> factors returning
         ///     a new <see cref="Pix" /> of the same depth.
         /// </summary>
+        /// <param name="source">The source image to scale.</param>
         /// <param name="scaleX"></param>
         /// <param name="scaleY"></param>
         /// <returns>The scaled image.</returns>
@@ -111,7 +111,7 @@
         ///         Warning: implicit assumption about RGB component order for LI color scaling
         ///     </para>
         /// </remarks>
-        public Pix ScaleImage([NotNull] Pix source, float scaleX, float scaleY)
+        public Pix ScaleImage(Pix source, float scaleX, float scaleY)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             IntPtr result = this.leptonicaApi.pixScale(source.Handle, scaleX, scaleY);

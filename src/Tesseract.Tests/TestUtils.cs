@@ -9,10 +9,9 @@
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static string NormaliseNewLine(string text)
+        public static string? NormaliseNewLine(string? text)
         {
-            return text
-                .Replace("\r\n", "\n")
+            return text?.Replace("\r\n", "\n")
                 .Replace("\r", "\n");
         }
 

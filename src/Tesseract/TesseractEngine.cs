@@ -2,14 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Runtime.InteropServices;
-    using System.Security;
     using Abstractions;
-    using Internal;
+    using Interop;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
     using Microsoft.Extensions.Logging.Abstractions;
 
     /// <summary>
@@ -17,7 +14,6 @@
     /// </summary>
     public class TesseractEngine : DisposableBase, ITesseractEngine
     {
-        private static readonly TraceSource trace = new("Tesseract");
         private readonly IManagedTesseractApi api;
         private readonly ILeptonicaApiSignatures leptonicaNativeApi;
         private readonly ITessApiSignatures native;
@@ -30,29 +26,20 @@
         private int processCount;
 
         /// <summary>
-        ///     Creates a new instance of <see cref="TesseractEngine" /> with the specified <paramref name="engineMode" /> and
-        ///     <paramref name="configFiles" />.
+        ///     Creates a new instance of <see cref="TesseractEngine" /> with the specified <paramref name="options" />.
         /// </summary>
-        /// <remarks>
-        ///     <para>
-        ///         The <paramref name="datapath" /> parameter should point to the directory that contains the 'tessdata' folder
-        ///         for example if your tesseract language data is installed in <c>C:\Tesseract\tessdata</c> the value of datapath
-        ///         should
-        ///         be <c>C:\Tesseract</c>. Note that tesseract will use the value of the <c>TESSDATA_PREFIX</c> environment
-        ///         variable if defined,
-        ///         effectively ignoring the value of <paramref name="datapath" /> parameter.
-        ///     </para>
-        /// </remarks>
-        /// <param name="api"></param>
-        /// <param name="native"></param>
-        /// <param name="pixFactory"></param>
+        /// <param name="api">An <see cref="IManagedTesseractApi" /> object providing access to the managed Tesseract API..</param>
+        /// <param name="native">An <see cref="ITessApiSignatures" /> object providing access to the raw Tesseract API.</param>
+        /// <param name="leptonicaNativeApi">An <see cref="ILeptonicaApiSignatures" /> object providing access to the unmanaged Leptonica API. </param>
+        /// <param name="pixFactory">An <see cref="IPixFactory" /> object that is used to create <see cref="Pix" /> instances when needed.</param>
+        /// <param name="pixFileWriter">An <see cref="IPixFileWriter" /> object that is used to store <see cref="Pix" /> objects to files.</param>
         /// <param name="options">An <see cref="TesseractEngineOptions" /> value representing the Tesseract engine configuration.</param>
         public TesseractEngine(
-            [NotNull] IManagedTesseractApi api,
-            [NotNull] ITessApiSignatures native,
-            [NotNull] ILeptonicaApiSignatures leptonicaNativeApi,
-            [NotNull] IPixFactory pixFactory,
-            [NotNull] IPixFileWriter pixFileWriter,
+            IManagedTesseractApi api,
+            ITessApiSignatures native,
+            ILeptonicaApiSignatures leptonicaNativeApi,
+            IPixFactory pixFactory,
+            IPixFileWriter pixFileWriter,
             TesseractEngineOptions options)
         {
             this.api = api ?? throw new ArgumentNullException(nameof(api));
@@ -70,10 +57,7 @@
 
         internal HandleRef Handle => this.handle;
 
-        public string Version =>
-            // Get version doesn't work for x64, might be compilation related for now just
-            // return constant so we don't crash.
-            this.api.GetVersion();
+        public string? Version => this.api.GetVersion();
 
         /// <summary>
         ///     Gets or sets default <see cref="PageSegMode" /> mode used by
@@ -91,7 +75,8 @@
         /// <param name="pageSegMode">The page layout analysis method to use.</param>
         public Page Process(Pix image, PageSegMode? pageSegMode = null)
         {
-            return this.Process(image, null, new Rect(0, 0, image.Width, image.Height), pageSegMode);
+            var region = new Rect(0, 0, image.Width, image.Height);
+            return this.Process(image, null, region, pageSegMode);
         }
 
         /// <summary>
@@ -120,7 +105,8 @@
         /// <param name="pageSegMode">The page layout analyasis method to use.</param>
         public Page Process(Pix image, string inputName, PageSegMode? pageSegMode = null)
         {
-            return this.Process(image, inputName, new Rect(0, 0, image.Width, image.Height), pageSegMode);
+            var region = new Rect(0, 0, image.Width, image.Height);
+            return this.Process(image, inputName, region, pageSegMode);
         }
 
         /// <summary>
@@ -134,11 +120,11 @@
         /// <param name="region">The image region to process.</param>
         /// <param name="pageSegMode">The page layout analyasis method to use.</param>
         /// <returns>A result iterator</returns>
-        public Page Process(Pix image, string inputName, Rect region, PageSegMode? pageSegMode = null)
+        public Page Process(Pix image, string? inputName, Rect region, PageSegMode? pageSegMode = null)
         {
-            if (image == null) throw new ArgumentNullException(nameof(image));
+            ArgumentNullException.ThrowIfNull(image);
             if (region.X1 < 0 || region.Y1 < 0 || region.X2 > image.Width || region.Y2 > image.Height)
-                throw new ArgumentException("The image region to be processed must be within the image bounds.", nameof(region));
+                throw new ArgumentException(Resources.Resources.TesseractEngine_Process_The_image_region_to_be_processed_must_be_within_the_image_bounds_, nameof(region));
             if (this.processCount > 0) throw new InvalidOperationException("Only one image can be processed at once. Please make sure you dispose of the page once your finished with it.");
 
             this.processCount++;
@@ -251,7 +237,7 @@
         /// <param name="name">The name of the variable.</param>
         /// <param name="value">The current value of the variable.</param>
         /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
-        public bool TryGetStringVariable(string name, out string value)
+        public bool TryGetStringVariable(string name, out string? value)
         {
             value = this.api.GetStringVariable(this.handle, name);
             return value != null;
@@ -269,24 +255,14 @@
 
         protected override void Dispose(bool disposing)
         {
-            if (this.handle.Handle != IntPtr.Zero)
-            {
-                this.native.BaseApiDelete(this.handle);
-                this.handle = new HandleRef(this, IntPtr.Zero);
-            }
-        }
+            if (this.IsDisposed == false && disposing)
+                if (this.handle.Handle != IntPtr.Zero)
+                {
+                    this.native.BaseApiDelete(this.handle);
+                    this.handle = new HandleRef(this, IntPtr.Zero);
+                }
 
-        private string GetTessDataPrefix()
-        {
-            try
-            {
-                return Environment.GetEnvironmentVariable("TESSDATA_PREFIX");
-            }
-            catch (SecurityException e)
-            {
-                trace.TraceEvent(TraceEventType.Error, 0, "Failed to detect if the environment variable 'TESSDATA_PREFIX' is set: {0}", e.Message);
-                return null;
-            }
+            base.Dispose(disposing);
         }
 
         private void Initialize()
@@ -299,7 +275,7 @@
                 dataPath = dataPath.Trim();
 
                 // remove any trialing '\' or '/' characters
-                if (dataPath.EndsWith("\\", StringComparison.Ordinal) || dataPath.EndsWith("/", StringComparison.Ordinal))
+                if (dataPath.EndsWith('\\') || dataPath.EndsWith('/'))
                     dataPath = dataPath.Substring(0, dataPath.Length - 1);
             }
 
@@ -310,17 +286,15 @@
             bool setOnlyNonDebugVariables = this.options.SetOnlyNonDebugVariables;
 
             int? result = this.api.Init(this.handle, dataPath, language, engineMode, configurationFiles, initialOptions, setOnlyNonDebugVariables);
-            if (result.HasValue && result.Value != 0)
-            {
-                // Special case logic to handle cleaning up as init has already released the handle if it fails.
-                this.handle = new HandleRef(this, IntPtr.Zero);
-                GC.SuppressFinalize(this);
+            if (result is null or 0) return;
+            // Special case logic to handle cleaning up as init has already released the handle if it fails.
+            this.handle = new HandleRef(this, IntPtr.Zero);
+            GC.SuppressFinalize(this);
 
-                throw new TesseractException(ErrorMessage.Format(1, "Failed to initialise tesseract engine."));
-            }
+            throw new TesseractException(Resources.Resources.TesseractEngine_Initialize_Failed_to_initialize_the_Tesseract_engine_);
         }
 
-        private void OnIteratorDisposed(object sender, EventArgs e)
+        private void OnIteratorDisposed(object? sender, EventArgs e)
         {
             this.processCount--;
         }
@@ -328,6 +302,7 @@
         /// <summary>
         ///     Ties the specified pix to the lifecycle of a page.
         /// </summary>
+        [Obsolete("This class will be removed soon.")]
         public class PageDisposalHandle
         {
             private readonly Page page;
@@ -335,12 +310,12 @@
 
             public PageDisposalHandle(Page page, Pix pix)
             {
-                this.page = page;
-                this.pix = pix;
+                this.page = page ?? throw new ArgumentNullException(nameof(page));
+                this.pix = pix ?? throw new ArgumentNullException(nameof(pix));
                 page.Disposed += this.OnPageDisposed;
             }
 
-            private void OnPageDisposed(object sender, EventArgs e)
+            private void OnPageDisposed(object? sender, EventArgs e)
             {
                 this.page.Disposed -= this.OnPageDisposed;
                 // dispose the pix when the page is disposed.

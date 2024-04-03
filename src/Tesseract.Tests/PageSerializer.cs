@@ -2,9 +2,7 @@
 {
     using System.Globalization;
     using System.Text;
-
     using Abstractions;
-
     using Interop;
 
     /// <summary>
@@ -12,7 +10,7 @@
     /// </summary>
     internal class PageSerializer
     {
-        public static string Serialize(Page page, bool outputChoices)
+        public static string? Serialize(Page page, bool outputChoices)
         {
             var output = new StringBuilder();
             using (ResultIterator iter = page.GetIterator())
@@ -70,7 +68,7 @@
                                     // symbol and choices
                                     if (outputChoices)
                                     {
-                                        using ChoiceIterator choiceIter = iter.GetChoiceIterator();
+                                        using ChoiceIterator? choiceIter = iter.GetChoiceIterator();
                                         float symbolConfidence = iter.GetConfidence(PageIteratorLevel.Symbol) / 100;
                                         if (choiceIter != null)
                                         {

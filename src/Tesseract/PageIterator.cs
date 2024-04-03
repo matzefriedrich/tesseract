@@ -2,13 +2,9 @@
 {
     using System;
     using System.Runtime.InteropServices;
-
     using Abstractions;
-
     using Interop;
     using Interop.Abstractions;
-
-    using JetBrains.Annotations;
 
     /// <summary>
     ///     Represents an object that can iterate over tesseract's page structure.
@@ -20,17 +16,17 @@
     /// </remarks>
     public class PageIterator : DisposableBase
     {
-        protected readonly HandleRef handle;
+        protected readonly HandleRef Handle;
         private readonly ITessApiSignatures nativeApi;
-        protected readonly Page page;
+        private readonly Page page;
         private readonly IPixFactory pixFactory;
 
-        internal PageIterator([NotNull] ITessApiSignatures nativeApi, [NotNull] IPixFactory pixFactory, Page page, IntPtr handle)
+        internal PageIterator(ITessApiSignatures nativeApi, IPixFactory pixFactory, Page page, IntPtr handle)
         {
             this.nativeApi = nativeApi ?? throw new ArgumentNullException(nameof(nativeApi));
             this.pixFactory = pixFactory ?? throw new ArgumentNullException(nameof(pixFactory));
             this.page = page;
-            this.handle = new HandleRef(this, handle);
+            this.Handle = new HandleRef(this, handle);
         }
 
         public PolyBlockType BlockType
@@ -39,9 +35,9 @@
             {
                 this.ThrowIfDisposed();
 
-                if (this.handle.Handle == IntPtr.Zero)
+                if (this.Handle.Handle == IntPtr.Zero)
                     return PolyBlockType.Unknown;
-                return this.nativeApi.PageIteratorBlockType(this.handle);
+                return this.nativeApi.PageIteratorBlockType(this.Handle);
             }
         }
 
@@ -51,7 +47,7 @@
         public void Begin()
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle != IntPtr.Zero) this.nativeApi.PageIteratorBegin(this.handle);
+            if (this.Handle.Handle != IntPtr.Zero) this.nativeApi.PageIteratorBegin(this.Handle);
         }
 
         /// <summary>
@@ -64,9 +60,9 @@
         public bool Next(PageIteratorLevel level)
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle == IntPtr.Zero)
+            if (this.Handle.Handle == IntPtr.Zero)
                 return false;
-            return this.nativeApi.PageIteratorNext(this.handle, level) != 0;
+            return this.nativeApi.PageIteratorNext(this.Handle, level) != 0;
         }
 
         /// <summary>
@@ -101,9 +97,9 @@
         {
             this.ThrowIfDisposed();
 
-            if (this.handle.Handle == IntPtr.Zero)
+            if (this.Handle.Handle == IntPtr.Zero)
                 return false;
-            return this.nativeApi.PageIteratorIsAtBeginningOf(this.handle, level) != 0;
+            return this.nativeApi.PageIteratorIsAtBeginningOf(this.Handle, level) != 0;
         }
 
         /// <summary>
@@ -116,26 +112,26 @@
         {
             this.ThrowIfDisposed();
 
-            if (this.handle.Handle == IntPtr.Zero)
+            if (this.Handle.Handle == IntPtr.Zero)
                 return false;
 
-            int finalElement = this.nativeApi.PageIteratorIsAtFinalElement(this.handle, level, element);
+            int finalElement = this.nativeApi.PageIteratorIsAtFinalElement(this.Handle, level, element);
             return finalElement != 0;
         }
 
-        public Pix GetBinaryImage(PageIteratorLevel level)
+        public Pix? GetBinaryImage(PageIteratorLevel level)
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle == IntPtr.Zero) return null;
+            if (this.Handle.Handle == IntPtr.Zero) return null;
 
-            IntPtr binaryImage = this.nativeApi.PageIteratorGetBinaryImage(this.handle, level);
+            IntPtr binaryImage = this.nativeApi.PageIteratorGetBinaryImage(this.Handle, level);
             return this.pixFactory.Create(binaryImage);
         }
 
-        public Pix GetImage(PageIteratorLevel level, int padding, out int x, out int y)
+        public Pix? GetImage(PageIteratorLevel level, int padding, out int x, out int y)
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle == IntPtr.Zero)
+            if (this.Handle.Handle == IntPtr.Zero)
             {
                 x = 0;
                 y = 0;
@@ -143,7 +139,7 @@
                 return null;
             }
 
-            IntPtr image = this.nativeApi.PageIteratorGetImage(this.handle, level, padding, this.page.Image.Handle, out x, out y);
+            IntPtr image = this.nativeApi.PageIteratorGetImage(this.Handle, level, padding, this.page.Image.Handle, out x, out y);
             return this.pixFactory.Create(image);
         }
 
@@ -156,7 +152,7 @@
         public bool TryGetBoundingBox(PageIteratorLevel level, out Rect bounds)
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle != IntPtr.Zero && this.nativeApi.PageIteratorBoundingBox(this.handle, level, out int x1, out int y1, out int x2, out int y2) != 0)
+            if (this.Handle.Handle != IntPtr.Zero && this.nativeApi.PageIteratorBoundingBox(this.Handle, level, out int x1, out int y1, out int x2, out int y2) != 0)
             {
                 bounds = Rect.FromCoords(x1, y1, x2, y2);
                 return true;
@@ -180,7 +176,7 @@
         public bool TryGetBaseline(PageIteratorLevel level, out Rect bounds)
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle != IntPtr.Zero && this.nativeApi.PageIteratorBaseline(this.handle, level, out int x1, out int y1, out int x2, out int y2) != 0)
+            if (this.Handle.Handle != IntPtr.Zero && this.nativeApi.PageIteratorBaseline(this.Handle, level, out int x1, out int y1, out int x2, out int y2) != 0)
             {
                 bounds = Rect.FromCoords(x1, y1, x2, y2);
                 return true;
@@ -196,16 +192,16 @@
         public ElementProperties GetProperties()
         {
             this.ThrowIfDisposed();
-            if (this.handle.Handle == IntPtr.Zero) return new ElementProperties(Orientation.PageUp, TextLineOrder.TopToBottom, WritingDirection.LeftToRight, 0f);
+            if (this.Handle.Handle == IntPtr.Zero) return new ElementProperties(Orientation.PageUp, TextLineOrder.TopToBottom, WritingDirection.LeftToRight, 0f);
 
-            this.nativeApi.PageIteratorOrientation(this.handle, out Orientation orientation, out WritingDirection writingDirection, out TextLineOrder textLineOrder, out float deskew_angle);
+            this.nativeApi.PageIteratorOrientation(this.Handle, out Orientation orientation, out WritingDirection writingDirection, out TextLineOrder textLineOrder, out float deskewAngle);
 
-            return new ElementProperties(orientation, textLineOrder, writingDirection, deskew_angle);
+            return new ElementProperties(orientation, textLineOrder, writingDirection, deskewAngle);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (this.handle.Handle != IntPtr.Zero) this.nativeApi.PageIteratorDelete(this.handle);
+            if (this.Handle.Handle != IntPtr.Zero) this.nativeApi.PageIteratorDelete(this.Handle);
         }
     }
 }

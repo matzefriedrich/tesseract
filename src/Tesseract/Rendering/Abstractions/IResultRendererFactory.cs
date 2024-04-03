@@ -1,19 +1,18 @@
-﻿namespace Tesseract.Abstractions
+﻿namespace Tesseract.Rendering.Abstractions
 {
     using System.Collections.Generic;
-
-    using Rendering.Abstractions;
+    using Tesseract.Abstractions;
 
     public interface IResultRendererFactory
     {
         /// <summary>
         ///     Creates renderers for specified output formats.
         /// </summary>
-        /// <param name="outputbase"></param>
+        /// <param name="outputBase"></param>
         /// <param name="dataPath">The directory containing the pdf font data, normally same as your tessdata directory.</param>
         /// <param name="outputFormats"></param>
         /// <returns></returns>
-        IEnumerable<IResultRenderer> CreateRenderers(string outputbase, string dataPath, List<RenderedFormat> outputFormats);
+        IEnumerable<IResultRenderer> CreateRenderers(string outputBase, string dataPath, List<RenderedFormat> outputFormats);
 
         /// <summary>
         ///     Creates a <see cref="IResultRenderer">result renderer</see> that render that generates a searchable
@@ -72,7 +71,7 @@
         /// </summary>
         /// <param name="outputFilename">The path to the unlv file to be created without the file extension.</param>
         /// <returns></returns>
-        IResultRenderer CreateLSTMBoxRenderer(string outputFilename);
+        IResultRenderer CreateLstmBoxRenderer(string outputFilename);
 
         /// <summary>
         ///     Creates a <see cref="IResultRenderer">result renderer</see> that render that generates a unlv

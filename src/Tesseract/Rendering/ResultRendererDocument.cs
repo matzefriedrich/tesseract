@@ -1,31 +1,30 @@
 ﻿namespace Tesseract.Rendering
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
-
     using Abstractions;
-
     using Interop.Abstractions;
-
-    using JetBrains.Annotations;
+    using Resources;
 
     /// <summary>
     ///     Encapsulates a renderer handle and manages all memory and state of a result-renderer document.
     /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public sealed class ResultRendererDocument : UnmanagedDocument
     {
         private readonly ITessApiSignatures native;
         private IntPtr titlePtr;
 
         internal ResultRendererDocument(
-            [NotNull] ITessApiSignatures native,
+            ITessApiSignatures native,
             HandleRef rendererHandle,
-            [NotNull] string title)
+            string title)
         {
-            if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(title));
+            if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(title));
             this.native = native ?? throw new ArgumentNullException(nameof(native));
             this.Title = title;
-            this.handle = rendererHandle;
+            this.Handle = rendererHandle;
             this.titlePtr = this.GetTitlePtr(title);
         }
 
@@ -33,24 +32,19 @@
 
         private IntPtr GetTitlePtr(string s)
         {
-            IntPtr titlePtr = Marshal.StringToHGlobalAnsi(s);
-            if (this.native.ResultRendererBeginDocument(this.handle, titlePtr) == 0)
-            {
-                // release the pointer first before throwing an error.
-                Marshal.FreeHGlobal(titlePtr);
-                throw new InvalidOperationException($"Failed to begin document \"{s}\".");
-            }
+            IntPtr ptr = Marshal.StringToHGlobalAnsi(s);
+            if (this.native.ResultRendererBeginDocument(this.Handle, ptr) != 0) return ptr;
 
-            return titlePtr;
+            // release the pointer first before throwing an error.
+            Marshal.FreeHGlobal(ptr);
+            throw new InvalidOperationException($"Failed to begin document \"{s}\".");
         }
 
         private void FreeTitlePtr()
         {
-            if (this.titlePtr != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(this.titlePtr);
-                this.titlePtr = IntPtr.Zero;
-            }
+            if (this.titlePtr == IntPtr.Zero) return;
+            Marshal.FreeHGlobal(this.titlePtr);
+            this.titlePtr = IntPtr.Zero;
         }
 
         /// <summary>
@@ -68,19 +62,19 @@
             // implicitly if required. This is why I've only made Page.Recognise internal not public.
             page.Recognize();
 
-            int result = this.native.ResultRendererAddImage(this.handle, page.Engine.Handle);
+            int result = this.native.ResultRendererAddImage(this.Handle, page.Engine.Handle);
             return result != 0;
         }
 
         public override int GetPageNumber()
         {
             this.ThrowIfDisposed();
-            return this.native.ResultRendererImageNum(this.handle);
+            return this.native.ResultRendererImageNum(this.Handle);
         }
 
         private void FinishDocument()
         {
-            this.native.ResultRendererEndDocument(this.handle);
+            this.native.ResultRendererEndDocument(this.Handle);
             this.FreeTitlePtr();
         }
 
@@ -90,8 +84,10 @@
             {
                 this.FinishDocument();
 
-                this.handle = new HandleRef(this, IntPtr.Zero);
+                this.Handle = new HandleRef(this, IntPtr.Zero);
             }
+
+            base.Dispose(disposing);
         }
     }
 }

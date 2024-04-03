@@ -1,11 +1,8 @@
 ﻿namespace Tesseract.Tests.ResultIteratorTests
 {
     using Abstractions;
-
     using Interop;
-
     using Microsoft.Extensions.DependencyInjection;
-
     using NUnit.Framework;
 
     [TestFixture]
@@ -43,7 +40,7 @@
             using ResultIterator sut = page.GetIterator();
 
             // Act
-            string actual = sut.GetText(level);
+            string? actual = sut.GetText(level);
 
             // Assert
             Assert.That(actual, Is.Null);

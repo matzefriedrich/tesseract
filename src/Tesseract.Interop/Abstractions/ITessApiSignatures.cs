@@ -1,9 +1,8 @@
 ﻿namespace Tesseract.Interop.Abstractions
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
-
     using InteropDotNet;
-
     using Tesseract.Abstractions;
 
     /// <summary>
@@ -14,6 +13,9 @@
     ///     It should be considered an internal interface and is NOT part of the public api and may have
     ///     breaking changes between releases.
     /// </remarks>
+    [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "The names in that interface shall match the imported symbol names.")]
+    [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "This implementation type of this interface will be emitted at runtime, thus an implementation can not exist.")]
+    [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
     public interface ITessApiSignatures
     {
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessBaseAPIGetComponentImages")]
@@ -148,8 +150,6 @@
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessVersion")]
         IntPtr GetVersion();
 
-        // result iterator
-
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessPageIteratorBaseline")]
         int PageIteratorBaseline(HandleRef handle, PageIteratorLevel level, out int x1, out int y1, out int x2, out int y2);
 
@@ -226,8 +226,6 @@
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessBaseAPIPrintVariablesToFile")]
         int BaseApiPrintVariablesToFile(HandleRef handle, string filename);
 
-        #region Choice Iterator
-
         /// <summary>
         ///     Native API call to TessResultIteratorGetChoiceIterator
         /// </summary>
@@ -266,10 +264,6 @@
         /// <returns></returns>
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessChoiceIteratorConfidence")]
         float ChoiceIteratorGetConfidence(HandleRef handle);
-
-        #endregion Choice Iterator
-
-        #region Renderer API
 
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessTextRendererCreate")]
         IntPtr TextRendererCreate(string outputbase);
@@ -327,7 +321,5 @@
 
         [RuntimeDllImport(Constants.TesseractDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "TessResultRendererImageNum")]
         int ResultRendererImageNum(HandleRef renderer);
-
-        #endregion Renderer API
     }
 }

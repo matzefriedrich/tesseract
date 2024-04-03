@@ -3,16 +3,16 @@
     using System;
     using System.Runtime.InteropServices;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
+    using Resources;
 
     public sealed class PdfResultRenderer : ResultRenderer
     {
         private readonly IntPtr fontDirectoryHandle;
 
-        public PdfResultRenderer(ITessApiSignatures native, [NotNull] string outputFilename, [NotNull] string fontDirectory, bool isTextOnly) : base(native)
+        public PdfResultRenderer(ITessApiSignatures native, string outputFilename, string fontDirectory, bool isTextOnly) : base(native)
         {
-            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(outputFilename));
-            if (string.IsNullOrWhiteSpace(fontDirectory)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(fontDirectory));
+            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(outputFilename));
+            if (string.IsNullOrWhiteSpace(fontDirectory)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(fontDirectory));
 
             this.fontDirectoryHandle = Marshal.StringToHGlobalAnsi(fontDirectory);
 

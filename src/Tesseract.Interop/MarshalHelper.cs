@@ -18,20 +18,17 @@
 
         public static string? PtrToString(IntPtr? handle, Encoding encoding)
         {
-            if (encoding == null) throw new ArgumentNullException(nameof(encoding));
-            if (handle != null)
-            {
-                int length = StrLength(handle.Value);
-                return new string((sbyte*)handle.Value.ToPointer(), 0, length, encoding);
-            }
+            ArgumentNullException.ThrowIfNull(encoding);
+            if (handle == null) return null;
 
-            return null;
+            int length = StrLength(handle.Value);
+            return new string((sbyte*)handle.Value.ToPointer(), 0, length, encoding);
         }
 
         /// <summary>
         ///     Gets the number of bytes in a null terminated byte array.
         /// </summary>
-        public static int StrLength(IntPtr handle)
+        private static int StrLength(IntPtr handle)
         {
             if (handle == IntPtr.Zero) return 0;
 

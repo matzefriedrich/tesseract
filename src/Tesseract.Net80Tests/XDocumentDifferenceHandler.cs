@@ -11,7 +11,7 @@
             XDocument right = XDocument.Load(expectedResultFilename);
 
             bool areEqual = XDocumentComparer.AreEqual(left, right);
-            
+
             // Assert
             Assert.IsTrue(areEqual, "The documents are not equal.");
         }

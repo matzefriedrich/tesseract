@@ -15,10 +15,10 @@
             return AreElementsEqual(left, right) && AreDescendantsEqual(left, right);
         }
 
-        private static bool AreDescendantsEqual(XContainer left, XContainer right)
+        private static bool AreDescendantsEqual(XContainer? left, XContainer? right)
         {
-            List<XElement> childElems1 = left.Elements().OrderBy(QualifiedElementName).ToList();
-            List<XElement> childElems2 = right.Elements().OrderBy(QualifiedElementName).ToList();
+            List<XElement> childElems1 = left?.Elements().OrderBy(QualifiedElementName).ToList() ?? [];
+            List<XElement> childElems2 = right?.Elements().OrderBy(QualifiedElementName).ToList() ?? [];
 
             if (childElems1.Count != childElems2.Count) return false;
 
@@ -39,17 +39,17 @@
             }
         }
 
-        private static bool AreElementsEqual(XElement left, XElement right)
+        private static bool AreElementsEqual(XElement? left, XElement? right)
         {
-            if (left.Name != right.Name) return false;
+            if (left?.Name != right?.Name) return false;
 
-            List<XAttribute> attributesLeft = left.Attributes().OrderBy(QualifiedAttributeName).ToList();
-            List<XAttribute> attributesRight = right.Attributes().OrderBy(QualifiedAttributeName).ToList();
+            List<XAttribute> attributesLeft = left?.Attributes().OrderBy(QualifiedAttributeName).ToList() ?? [];
+            List<XAttribute> attributesRight = right?.Attributes().OrderBy(QualifiedAttributeName).ToList() ?? [];
             if (!attributesLeft.SequenceEqual(attributesRight, new XAttributeEqualityComparer())) return false;
 
-            string valueLeft = left.Value.Trim();
-            string valueRight = right.Value.Trim();
-            
+            string? valueLeft = left?.Value.Trim();
+            string? valueRight = right?.Value.Trim();
+
             return string.Equals(valueLeft, valueRight, StringComparison.OrdinalIgnoreCase);
 
             string QualifiedAttributeName(XAttribute attribute)
@@ -60,7 +60,7 @@
 
         private class XAttributeEqualityComparer : IEqualityComparer<XAttribute>
         {
-            public bool Equals(XAttribute x, XAttribute y)
+            public bool Equals(XAttribute? x, XAttribute? y)
             {
                 if (ReferenceEquals(x, y)) return true;
                 if (ReferenceEquals(x, null)) return false;

@@ -3,11 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Runtime.InteropServices;
     using Abstractions;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
-    using Microsoft.Win32.SafeHandles;
 
     public class PixFileWriter : IPixFileWriter
     {
@@ -27,7 +24,7 @@
 
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        public PixFileWriter([NotNull] ILeptonicaApiSignatures leptonicaApi)
+        public PixFileWriter(ILeptonicaApiSignatures leptonicaApi)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
         }
@@ -63,7 +60,7 @@
                 throw new IOException($"Failed to save image '{filename}'.");
         }
 
-        public void Save([NotNull] Pix image, [NotNull] Stream target, ImageFormat format = ImageFormat.Default)
+        public void Save(Pix image, Stream target, ImageFormat format = ImageFormat.Default)
         {
             throw new NotImplementedException("Requires an implementation of: LEPT_DLL l_int32 pixWriteStream\t(\tFILE * \tfp,\nPIX * \tpix,\nl_int32 \tformat \n)\t");
         }

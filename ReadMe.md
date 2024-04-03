@@ -19,9 +19,9 @@ eliminate. Besides that, the evolvability and stability of the codebase do not m
 **Improvements to code readability**. There are some low-hanging fruits like:
 
 * Enablement of strict nullability (and addressing all compiler warnings)
-* Linearization of code-flow that leads to reduced nesting, for instance, 
-  * by preferring `using`-declarations instead of `using`-blocks if it does not extend a resource`s lifetime
-  * by inverting conditional statements (exit early)
+* Linearization of code-flow that leads to reduced nesting, for instance,
+    * by preferring `using`-declarations instead of `using`-blocks if it does not extend a resource`s lifetime
+    * by inverting conditional statements (exit early)
 * Inlining of out-variables and moving variable declarations closer to their usage
 * Replacement of custom guard clauses with built-in guard clauses
 * Substitution of `string.Format` statements by string interpolation
@@ -29,9 +29,12 @@ eliminate. Besides that, the evolvability and stability of the codebase do not m
 
 **Aligning the wrapper API with SOTA architectural concepts as found in the .NET space**, for instance:
 
-* Consistent usage of DI; the goal is to bring hidden dependencies to the surface and turn singleton implementations into service configurations with a singleton lifetime behavior (reduces static cling and boosts idempotency).
-* Adoption of the module system introduced by .NET Core (improved separation of concerns, reliable abstractions, interfaces, and primitive types)
-* Changing stateful types into stateless types (some classes need to perform probable erroneous state-checks on objects whose type implements the `IDisposable` interface)
+* Consistent usage of DI; the goal is to bring hidden dependencies to the surface and turn singleton implementations
+  into service configurations with a singleton lifetime behavior (reduces static cling and boosts idempotency).
+* Adoption of the module system introduced by .NET Core (improved separation of concerns, reliable abstractions,
+  interfaces, and primitive types)
+* Changing stateful types into stateless types (some classes need to perform probable erroneous state-checks on objects
+  whose type implements the `IDisposable` interface)
 * Adoption of performance benchmarks (no more performance measurements in unit tests)
 * Evaluation of compilation-time code generators (as a replacement for dynamic code based on reflection emit)
 * ...

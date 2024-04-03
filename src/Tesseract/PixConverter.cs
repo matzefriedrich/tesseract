@@ -2,10 +2,7 @@
 {
     using System;
     using System.Drawing;
-
     using Abstractions;
-
-    using JetBrains.Annotations;
 
     /// <summary>
     ///     Handles converting between different image formats supported by DotNet.
@@ -16,8 +13,8 @@
         private readonly IPixToBitmapConverter pixConverter;
 
         public PixConverter(
-            [NotNull] IBitmapToPixConverter bitmapConverter,
-            [NotNull] IPixToBitmapConverter pixConverter)
+            IBitmapToPixConverter bitmapConverter,
+            IPixToBitmapConverter pixConverter)
         {
             this.bitmapConverter = bitmapConverter ?? throw new ArgumentNullException(nameof(bitmapConverter));
             this.pixConverter = pixConverter ?? throw new ArgumentNullException(nameof(pixConverter));

@@ -44,7 +44,7 @@
             writer.Save(dest, this.TestResultRunFile("Conversion/ScaledBitmapToPix_rgb_32bpp.tif"), ImageFormat.Tiff);
 
             // Assert
-            Assert.That(scaledSource.GetBPP(), Is.EqualTo(32));
+            Assert.That(scaledSource.GetBpp(), Is.EqualTo(32));
             this.AssertAreEquivalent(scaledSource, dest, true);
         }
 
@@ -79,7 +79,7 @@
 
             // Assert
             Assert.That(source.PixelFormat, Is.EqualTo(pixelFormat));
-            Assert.That(source.GetBPP(), Is.EqualTo(depth));
+            Assert.That(source.GetBpp(), Is.EqualTo(depth));
             this.AssertAreEquivalent(source, dest, true);
         }
 
@@ -102,7 +102,7 @@
             pixFileWriter.Save(dest, destFilename, ImageFormat.Png);
 
             // Assert
-            Assert.That(source.GetBPP(), Is.EqualTo(8));
+            Assert.That(source.GetBpp(), Is.EqualTo(8));
             Assert.That(source.PixelFormat, Is.EqualTo(PixelFormat.Format8bppIndexed));
             this.AssertAreEquivalent(source, dest, true);
         }

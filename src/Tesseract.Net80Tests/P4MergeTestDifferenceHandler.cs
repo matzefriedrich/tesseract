@@ -1,6 +1,7 @@
 ﻿namespace Tesseract.Tests
 {
     using NUnit.Framework;
+    using static TestUtils;
 
     /// <summary>
     ///     Launches P4Merge to allow the user to update the reference, if required. This is handy when updating the underlying
@@ -11,19 +12,19 @@
     {
         public void Execute(string actualResultFilename, string expectedResultFilename)
         {
-            string actualResult = TestUtils.NormaliseNewLine(File.ReadAllText(actualResultFilename));
+            string? actualResult = NormaliseNewLine(File.ReadAllText(actualResultFilename));
 
             if (File.Exists(expectedResultFilename))
             {
                 // Load the expected results and verify that they match
-                string expectedResult = TestUtils.NormaliseNewLine(File.ReadAllText(expectedResultFilename));
+                string? expectedResult = NormaliseNewLine(File.ReadAllText(expectedResultFilename));
                 if (expectedResult != actualResult)
                 {
                     Console.WriteLine($"Expected results to be \"{expectedResultFilename}\" but was \"{actualResultFilename}\", launching merge tool.");
                     this.Merge(actualResultFilename, expectedResultFilename);
 
                     // User may have updated expected results, only fail if it's still different
-                    expectedResult = TestUtils.NormaliseNewLine(File.ReadAllText(expectedResultFilename));
+                    expectedResult = NormaliseNewLine(File.ReadAllText(expectedResultFilename));
                     if (expectedResult != actualResult) Assert.Fail("Expected results to be \"{0}\" but was \"{1}\".", expectedResultFilename, actualResultFilename);
                 }
             }
@@ -42,7 +43,7 @@
         private void Merge(string actualResultFileName, string expectedResultFilename)
         {
             // Note currently merge tool is hard coded and expected the command line "merge.exe %base %left %right %merged"
-            TestUtils.Cmd("p4merge.exe", expectedResultFilename, actualResultFileName, expectedResultFilename, expectedResultFilename);
+            Cmd("p4merge.exe", expectedResultFilename, actualResultFileName, expectedResultFilename, expectedResultFilename);
         }
     }
 }

@@ -126,7 +126,7 @@
             using Pix rotatedPix = rotator.RotateImage(img, (float)Math.PI);
             using Page page = engine.Process(rotatedPix, pageSegMode);
 
-            page.DetectBestOrientationAndScript(out int orientation, out float _, out string scriptName, out float _);
+            page.DetectBestOrientationAndScript(out int orientation, out float _, out string? scriptName, out float? _);
 
             // Assert
             Assert.That(orientation, Is.EqualTo(180));
@@ -154,7 +154,7 @@
             // Act
             using Page page = engine.Process(rotatedPix, PageSegMode.OsdOnly);
 
-            page.DetectBestOrientationAndScript(out int orientation, out float _, out string scriptName, out float _);
+            page.DetectBestOrientationAndScript(out int orientation, out float _, out string? scriptName, out float? _);
 
             // Assert
             Assert.That(orientation, Is.EqualTo(expectedOrientation));
@@ -203,12 +203,13 @@
             pageLayout.Begin();
 
             // Act
-            using Pix elementImg = pageLayout.GetImage(level, padding, out int x, out int y);
+            using Pix? elementImg = pageLayout.GetImage(level, padding, out int x, out int y);
             var elementImgFilename = $@"AnalyseResult/GetImage/ResultIterator_Image_{level}_{padding}_at_({x},{y}).png";
 
             // TODO: Ensure generated pix is equal to expected pix, only saving it if it's not.
             string destFilename = this.TestResultRunFile(elementImgFilename);
-            pixFileWriter.Save(elementImg, destFilename, ImageFormat.Png);
+            if (elementImg != null)
+                pixFileWriter.Save(elementImg, destFilename, ImageFormat.Png);
         }
 
         private void ExpectedOrientation(float rotation, out Orientation orientation, out float deskew)

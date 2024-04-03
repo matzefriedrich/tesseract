@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Drawing;
     using System.IO;
     using System.Runtime.InteropServices;
@@ -10,12 +11,12 @@
     using Abstractions;
     using Interop;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
     using Microsoft.Extensions.Logging;
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public sealed class Page : DisposableBase
     {
-        private static readonly TraceSource trace = new("Tesseract");
+        private static readonly TraceSource Trace = new("Tesseract");
         private readonly IManagedTesseractApi api;
         private readonly ILeptonicaApiSignatures leptonicaNativeApi;
         private readonly ILogger<Page> logger;
@@ -27,14 +28,14 @@
         private bool runRecognitionPhase;
 
         internal Page(
-            [NotNull] TesseractEngine engine,
-            [NotNull] IManagedTesseractApi api,
-            [NotNull] ITessApiSignatures nativeApi,
-            [NotNull] ILeptonicaApiSignatures leptonicaNativeApi,
-            [NotNull] IPixFactory pixFactory,
-            [NotNull] IPixFileWriter pixFileWriter,
-            [NotNull] ILogger<Page> logger,
-            Pix image, string imageName, Rect regionOfInterest, PageSegMode pageSegmentMode)
+            TesseractEngine engine,
+            IManagedTesseractApi api,
+            ITessApiSignatures nativeApi,
+            ILeptonicaApiSignatures leptonicaNativeApi,
+            IPixFactory pixFactory,
+            IPixFileWriter pixFileWriter,
+            ILogger<Page> logger,
+            Pix image, string? imageName, Rect regionOfInterest, PageSegMode pageSegmentMode)
         {
             this.api = api ?? throw new ArgumentNullException(nameof(api));
             this.nativeApi = nativeApi ?? throw new ArgumentNullException(nameof(nativeApi));
@@ -60,10 +61,9 @@
         ///     Gets the name of the image being ocr'd.
         /// </summary>
         /// <remarks>
-        ///     This is also used for some of the more advanced functionality such as identifying the associated UZN file if
-        ///     present.
+        ///     This is also used for some of the more advanced functionality such as identifying the associated UZN file if present.
         /// </remarks>
-        public string ImageName { get; private set; }
+        public string? ImageName { get; private set; }
 
         /// <summary>
         ///     Gets the page segmentation mode used to OCR the specified image.
@@ -102,7 +102,7 @@
             this.Recognize();
 
             IntPtr pixHandle = this.nativeApi.BaseAPIGetThresholdedImage(this.Engine.Handle);
-            if (pixHandle == IntPtr.Zero) throw new TesseractException("Failed to get thresholded image.");
+            if (pixHandle == IntPtr.Zero) throw new TesseractException(Resources.Resources.Page_GetThresholdedImage_Failed_to_get_thresholded_image_);
 
             return this.pixFactory.Create(pixHandle);
         }
@@ -125,7 +125,7 @@
         ///     Creates a <see cref="ResultIterator" /> object that is used to iterate over the page as defined by the current
         ///     <see cref="Page.RegionOfInterest" />.
         /// </summary>
-        /// <returns>Returns a new <see cref="ResultIterator" /> object./returns>
+        /// <returns>Returns a new <see cref="ResultIterator" /> object.</returns>
         public ResultIterator GetIterator()
         {
             this.Recognize();
@@ -137,11 +137,11 @@
         ///     Gets the page's content as plain text.
         /// </summary>
         /// <returns></returns>
-        public string GetText(Rect regionOfInterest = default)
+        public string? GetText(Rect regionOfInterest = default)
         {
             this.Recognize();
             HandleRef engineHandle = this.Engine.Handle;
-            return this.api.GetUTF8Text(engineHandle);
+            return this.api.GetUtf8Text(engineHandle);
         }
 
         /// <summary>
@@ -150,15 +150,15 @@
         /// <param name="pageNum">The page number (zero based).</param>
         /// <param name="useXHtml">True to use XHTML Output, False to HTML Output</param>
         /// <returns>The OCR'd output as an HOCR text string.</returns>
-        public string GetHOCRText(int pageNum, bool useXHtml = false)
+        public string? GetHocrText(int pageNum, bool useXHtml = false)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
-            
+
             this.Recognize();
 
             HandleRef engineHandle = this.Engine.Handle;
             HocrTextFormat textFormat = useXHtml ? HocrTextFormat.XHtml : HocrTextFormat.Html;
-            return this.api.GetHOCRText(engineHandle, pageNum, textFormat);
+            return this.api.GetHocrText(engineHandle, pageNum, textFormat);
         }
 
         /// <summary>
@@ -166,7 +166,7 @@
         /// </summary>
         /// <param name="pageNum">The page number (zero based).</param>
         /// <returns>The OCR'd output as an Alto text string.</returns>
-        public string GetAltoText(int pageNum)
+        public string? GetAltoText(int pageNum)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
@@ -178,7 +178,7 @@
         /// </summary>
         /// <param name="pageNum">The page number (zero based).</param>
         /// <returns>The OCR'd output as a Tsv text string.</returns>
-        public string GetTsvText(int pageNum)
+        public string? GetTsvText(int pageNum)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
@@ -190,7 +190,7 @@
         /// </summary>
         /// <param name="pageNum">The page number (zero based).</param>
         /// <returns>The OCR'd output as a Box text string.</returns>
-        public string GetBoxText(int pageNum)
+        public string? GetBoxText(int pageNum)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
@@ -202,11 +202,11 @@
         /// </summary>
         /// <param name="pageNum">The page number (zero based).</param>
         /// <returns>The OCR'd output as a LSTMBox text string.</returns>
-        public string GetLSTMBoxText(int pageNum)
+        public string? GetLstmBoxText(int pageNum)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
-            return this.api.GetLSTMBoxText(this.Engine.Handle, pageNum);
+            return this.api.GetLstmBoxText(this.Engine.Handle, pageNum);
         }
 
         /// <summary>
@@ -214,7 +214,7 @@
         /// </summary>
         /// <param name="pageNum">The page number (zero based).</param>
         /// <returns>The OCR'd output as a WordStrBox text string.</returns>
-        public string GetWordStrBoxText(int pageNum)
+        public string? GetWordStrBoxText(int pageNum)
         {
             if (pageNum < 0) throw new ArgumentException("Page number must be greater than or equal to zero (0).");
             this.Recognize();
@@ -224,12 +224,11 @@
         /// <summary>
         ///     Gets the page's content as an UNLV text.
         /// </summary>
-        /// <param name="pageNum">The page number (zero based).</param>
         /// <returns>The OCR'd output as an UNLV text string.</returns>
-        public string GetUNLVText()
+        public string? GetUnlvText()
         {
             this.Recognize();
-            return this.api.GetUNLVText(this.Engine.Handle);
+            return this.api.GetUnlvText(this.Engine.Handle);
         }
 
         /// <summary>
@@ -249,7 +248,7 @@
         /// <returns></returns>
         public List<Rectangle> GetSegmentedRegions(PageIteratorLevel pageIteratorLevel)
         {
-            IntPtr boxArray = this.nativeApi.BaseAPIGetComponentImages(this.Engine.Handle, pageIteratorLevel, Constants.TRUE, IntPtr.Zero, IntPtr.Zero);
+            IntPtr boxArray = this.nativeApi.BaseAPIGetComponentImages(this.Engine.Handle, pageIteratorLevel, Constants.True, IntPtr.Zero, IntPtr.Zero);
             int boxCount = this.leptonicaNativeApi.boxaGetCount(new HandleRef(this, boxArray));
 
             var boxList = new List<Rectangle>();
@@ -311,7 +310,7 @@
         /// <param name="confidence">The confidence level of the orientation (15 is reasonably confident).</param>
         public void DetectBestOrientation(out int orientation, out float confidence)
         {
-            this.DetectBestOrientationAndScript(out orientation, out confidence, out string _, out float _);
+            this.DetectBestOrientationAndScript(out orientation, out confidence, out string? _, out float? _);
         }
 
         /// <summary>
@@ -324,27 +323,22 @@
         /// </remarks>
         /// <param name="orientation">The detected clockwise page rotation in degrees (0, 90, 180, or 270).</param>
         /// <param name="confidence">The confidence level of the orientation (15 is reasonably confident).</param>
-        /// <param name="scriptName">
-        ///     The name of the script (e.g. Latin)
-        ///     <param>
-        ///         <param name="scriptConfidence">The confidence level in the script</param>
-        public void DetectBestOrientationAndScript(out int orientation, out float confidence, out string scriptName, out float scriptConfidence)
+        /// <param name="scriptName">The name of the script (e.g. Latin) </param>
+        /// <param name="scriptConfidence">The confidence level in the script</param>
+        public void DetectBestOrientationAndScript(out int orientation, out float confidence, out string? scriptName, out float? scriptConfidence)
         {
+            scriptConfidence = null;
             HandleRef engineHandle = this.Engine.Handle;
-            if (this.nativeApi.TessBaseAPIDetectOrientationScript(engineHandle, out int orient_deg, out float orient_conf, out IntPtr script_nameHandle, out float script_conf) != 0)
+            if (this.nativeApi.TessBaseAPIDetectOrientationScript(engineHandle, out int orientDeg, out float orientConf, out IntPtr scriptNameHandle, out float scriptConf) != 0)
             {
-                orientation = orient_deg;
-                confidence = orient_conf;
-                if (script_nameHandle != IntPtr.Zero)
-                    scriptName = MarshalHelper.PtrToString(script_nameHandle, Encoding.ASCII);
-                else
-                    scriptName = null;
-
-                scriptConfidence = script_conf;
+                orientation = orientDeg;
+                confidence = orientConf;
+                scriptName = scriptNameHandle != IntPtr.Zero ? MarshalHelper.PtrToString(scriptNameHandle, Encoding.ASCII) : null;
+                scriptConfidence = scriptConf;
             }
             else
             {
-                throw new TesseractException("Failed to detect image orientation.");
+                throw new TesseractException(Resources.Resources.Page_DetectBestOrientationAndScript_Failed_to_detect_image_orientation_);
             }
         }
 
@@ -366,12 +360,12 @@
                     {
                         const ImageFormat imageFormat = ImageFormat.TiffG4;
                         this.pixFileWriter.Save(thresholdedImage, filePath, imageFormat);
-                        trace.TraceEvent(TraceEventType.Information, 2, "Successfully saved the thresholded image to '{0}'", filePath);
+                        Trace.TraceEvent(TraceEventType.Information, 2, "Successfully saved the thresholded image to '{0}'", filePath);
                     }
                     catch (Exception error)
                     {
                         this.logger.LogError(error, $"Failed to save the thresholded image to {filePath} due to an unhandled error.");
-                        trace.TraceEvent(TraceEventType.Error, 2, "Failed to save the thresholded image to '{0}'.\nError: {1}", filePath, error.Message);
+                        Trace.TraceEvent(TraceEventType.Error, 2, "Failed to save the thresholded image to '{0}'.\nError: {1}", filePath, error.Message);
                     }
                 }
             }

@@ -2,16 +2,13 @@
 {
     using System;
     using System.Runtime.CompilerServices;
-
     using Interop.Abstractions;
-
-    using JetBrains.Annotations;
 
     public unsafe class PixData
     {
         private readonly ILeptonicaApiSignatures leptonicaApi;
 
-        internal PixData([NotNull] ILeptonicaApiSignatures leptonicaApi, Pix pix)
+        internal PixData(ILeptonicaApiSignatures leptonicaApi, Pix pix)
         {
             this.leptonicaApi = leptonicaApi ?? throw new ArgumentNullException(nameof(leptonicaApi));
             this.Pix = pix;
@@ -46,7 +43,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint EncodeAsRGBA(byte red, byte green, byte blue, byte alpha)
+        public static uint EncodeAsRgba(byte red, byte green, byte blue, byte alpha)
         {
             return (uint)((red << 24) |
                           (green << 16) |
@@ -78,7 +75,7 @@
         ///     Gets the pixel value for a 2bpp image.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint GetDataDIBit(uint* data, int index)
+        public static uint GetDataDiBit(uint* data, int index)
         {
             return (*(data + (index >> 4)) >> (2 * (15 - (index & 15)))) & 3;
         }
@@ -87,7 +84,7 @@
         ///     Sets the pixel value for a 2bpp image.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void SetDataDIBit(uint* data, int index, uint value)
+        public static void SetDataDiBit(uint* data, int index, uint value)
         {
             uint* wordPtr = data + (index >> 4);
             *wordPtr &= ~(0xc0000000 >> (2 * (index & 15)));

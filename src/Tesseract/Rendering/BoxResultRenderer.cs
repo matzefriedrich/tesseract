@@ -2,13 +2,14 @@
 {
     using System;
     using Interop.Abstractions;
-    using JetBrains.Annotations;
+    using Resources;
 
     public sealed class BoxResultRenderer : ResultRenderer
     {
-        public BoxResultRenderer(ITessApiSignatures native, [NotNull] string outputFilename) : base(native)
+        public BoxResultRenderer(ITessApiSignatures native, string outputFilename) : base(native)
         {
-            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(outputFilename));
+            if (string.IsNullOrWhiteSpace(outputFilename)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(outputFilename));
+
             IntPtr handle = native.BoxTextRendererCreate(outputFilename);
             this.AssignHandle(handle);
         }

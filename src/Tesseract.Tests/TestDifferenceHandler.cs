@@ -11,8 +11,8 @@
         {
             if (File.Exists(expectedResultFilename))
             {
-                string actualResult = TestUtils.NormaliseNewLine(File.ReadAllText(actualResultFilename));
-                string expectedResult = TestUtils.NormaliseNewLine(File.ReadAllText(expectedResultFilename));
+                string? actualResult = TestUtils.NormaliseNewLine(File.ReadAllText(actualResultFilename));
+                string? expectedResult = TestUtils.NormaliseNewLine(File.ReadAllText(expectedResultFilename));
                 if (expectedResult != actualResult) Assert.Fail("Expected results to be \"{0}\" but was \"{1}\".", expectedResultFilename, actualResultFilename);
             }
             else

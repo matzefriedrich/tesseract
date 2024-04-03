@@ -2,6 +2,7 @@
 {
     using Abstractions;
     using ImageProcessing;
+    using ImageProcessing.Abstractions;
     using Interop.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;

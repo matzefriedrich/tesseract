@@ -1,10 +1,12 @@
 ﻿namespace Tesseract.Abstractions
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Drawing;
+    using Interop;
 
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public static class TesseractEngineBitmapProcessingExtensions
     {
-        
         /// <summary>
         ///     Process the specified bitmap image.
         /// </summary>
@@ -13,6 +15,8 @@
         ///     this method must convert the bitmap to a pix for processing which will add additional overhead.
         ///     Leptonica also supports a large number of image pre-processing functions as well.
         /// </remarks>
+        /// <param name="engine">The <see cref="ITesseractEngine" /> object that processes the image.</param>
+        /// <param name="converter">An <see cref="IPixConverter" /> object that is used convert <see cref="Bitmap" /> objects into <see cref="Pix" /> objects.</param>
         /// <param name="image">The image to process.</param>
         /// <param name="inputName">Sets the input file's name, only needed for training or loading a uzn file.</param>
         /// <param name="pageSegMode">The page segmentation mode.</param>
@@ -27,10 +31,11 @@
         ///     Process the specified bitmap image.
         /// </summary>
         /// <remarks>
-        ///     Please consider <see cref="System.Diagnostics.Process" /> instead. This is because
-        ///     this method must convert the bitmap to a pix for processing which will add additional overhead.
-        ///     Leptonica also supports a large number of image pre-processing functions as well.
+        ///     Please consider <see cref="System.Diagnostics.Process" /> instead. This is because this method must convert the bitmap to a pix for processing which will add additional overhead. Leptonica also supports a large number of image
+        ///     pre-processing functions as well.
         /// </remarks>
+        /// <param name="engine">The <see cref="ITesseractEngine" /> object that processes the image.</param>
+        /// <param name="converter">An <see cref="IPixConverter" /> object that is used convert <see cref="Bitmap" /> objects into <see cref="Pix" /> objects.</param>
         /// <param name="image">The image to process.</param>
         /// <param name="pageSegMode">The page segmentation mode.</param>
         /// <returns></returns>
@@ -48,34 +53,36 @@
         ///     this method must convert the bitmap to a pix for processing which will add additional overhead.
         ///     Leptonica also supports a large number of image pre-processing functions as well.
         /// </remarks>
+        /// <param name="engine">The <see cref="ITesseractEngine" /> object that processes the image.</param>
+        /// <param name="converter">An <see cref="IPixConverter" /> object that is used convert <see cref="Bitmap" /> objects into <see cref="Pix" /> objects.</param>
         /// <param name="image">The image to process.</param>
         /// <param name="region">The region of the image to process.</param>
         /// <param name="pageSegMode">The page segmentation mode.</param>
         /// <returns></returns>
         public static Page Process(this ITesseractEngine engine, IPixConverter converter, Bitmap image, Rect region, PageSegMode? pageSegMode = null)
         {
-            string inputName = null;
-            return engine.Process(converter, image, inputName, region, pageSegMode);
+            return engine.Process(converter, image, null, region, pageSegMode);
         }
 
         /// <summary>
         ///     Process the specified bitmap image.
         /// </summary>
         /// <remarks>
-        ///     Please consider <see cref="TesseractEngine.Process(Pix, string, Rect, PageSegMode?)" /> instead. This is because
-        ///     this method must convert the bitmap to a pix for processing which will add additional overhead.
-        ///     Leptonica also supports a large number of image pre-processing functions as well.
+        ///     Please consider <see cref="TesseractEngine.Process(Pix, string, Rect, PageSegMode?)" /> instead. This is because this method must convert the bitmap to a pix for processing which will add additional overhead. Leptonica also supports a
+        ///     large number of image pre-processing functions as well.
         /// </remarks>
+        /// <param name="engine">The <see cref="ITesseractEngine" /> object that processes the image.</param>
+        /// <param name="converter">An <see cref="IPixConverter" /> object that is used convert <see cref="Bitmap" /> objects into <see cref="Pix" /> objects.</param>
         /// <param name="image">The image to process.</param>
         /// <param name="inputName">Sets the input file's name, only needed for training or loading a uzn file.</param>
         /// <param name="region">The region of the image to process.</param>
         /// <param name="pageSegMode">The page segmentation mode.</param>
         /// <returns></returns>
-        public static Page Process(this ITesseractEngine engine, IPixConverter converter, Bitmap image, string inputName, Rect region, PageSegMode? pageSegMode = null)
+        public static Page Process(this ITesseractEngine engine, IPixConverter converter, Bitmap image, string? inputName, Rect region, PageSegMode? pageSegMode = null)
         {
-            Pix pix = converter.ToPix(image);
+            var pix = converter.ToPix(image);
             Page page = engine.Process(pix, inputName, region, pageSegMode);
-            new TesseractEngine.PageDisposalHandle(page, pix);
+            var _ = new TesseractEngine.PageDisposalHandle(page, pix);
             return page;
         }
     }
