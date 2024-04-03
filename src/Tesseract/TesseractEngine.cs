@@ -59,67 +59,30 @@
 
         public string? Version => this.api.GetVersion();
 
-        /// <summary>
-        ///     Gets or sets default <see cref="PageSegMode" /> mode used by
-        ///     <see cref="Tesseract.TesseractEngine.Process(Pix, Rect, PageSegMode?)" />.
-        /// </summary>
+        /// <inheritdoc />
         public PageSegMode DefaultPageSegMode { get; set; }
 
-        /// <summary>
-        ///     Processes the specific image.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="pageSegMode">The page layout analysis method to use.</param>
+        /// <inheritdoc />
         public Page Process(Pix image, PageSegMode? pageSegMode = null)
         {
             var region = new Rect(0, 0, image.Width, image.Height);
             return this.Process(image, null, region, pageSegMode);
         }
 
-        /// <summary>
-        ///     Processes a specified region in the image using the specified page layout analysis mode.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="region">The image region to process.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
-        /// <returns>A result iterator</returns>
+        /// <inheritdoc />
         public Page Process(Pix image, Rect region, PageSegMode? pageSegMode = null)
         {
             return this.Process(image, null, region, pageSegMode);
         }
 
-        /// <summary>
-        ///     Processes the specific image.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="inputName">Sets the input file's name, only needed for training or loading a uzn file.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
+        /// <inheritdoc />
         public Page Process(Pix image, string inputName, PageSegMode? pageSegMode = null)
         {
             var region = new Rect(0, 0, image.Width, image.Height);
             return this.Process(image, inputName, region, pageSegMode);
         }
 
-        /// <summary>
-        ///     Processes a specified region in the image using the specified page layout analysis mode.
-        /// </summary>
-        /// <remarks>
-        ///     You can only have one result iterator open at any one time.
-        /// </remarks>
-        /// <param name="image">The image to process.</param>
-        /// <param name="inputName">Sets the input file's name, only needed for training or loading a uzn file.</param>
-        /// <param name="region">The image region to process.</param>
-        /// <param name="pageSegMode">The page layout analyasis method to use.</param>
-        /// <returns>A result iterator</returns>
+        /// <inheritdoc />
         public Page Process(Pix image, string? inputName, Rect region, PageSegMode? pageSegMode = null)
         {
             ArgumentNullException.ThrowIfNull(image);
@@ -144,59 +107,34 @@
             return this.api.SetDebugVariable(this.handle, name, value) != 0;
         }
 
-        /// <summary>
-        ///     Sets the value of a string variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The new value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool SetVariable(string name, string value)
         {
             return this.api.SetVariable(this.handle, name, value) != 0;
         }
 
-        /// <summary>
-        ///     Sets the value of a boolean variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The new value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool SetVariable(string name, bool value)
         {
             string strEncodedValue = value ? "TRUE" : "FALSE";
             return this.api.SetVariable(this.handle, name, strEncodedValue) != 0;
         }
 
-        /// <summary>
-        ///     Sets the value of a integer variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The new value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool SetVariable(string name, int value)
         {
             var strEncodedValue = value.ToString("D", CultureInfo.InvariantCulture.NumberFormat);
             return this.api.SetVariable(this.handle, name, strEncodedValue) != 0;
         }
 
-        /// <summary>
-        ///     Sets the value of a double variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The new value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool SetVariable(string name, double value)
         {
             var strEncodedValue = value.ToString("R", CultureInfo.InvariantCulture.NumberFormat);
             return this.api.SetVariable(this.handle, name, strEncodedValue) != 0;
         }
 
-        /// <summary>
-        ///     Attempts to retrieve the value for a boolean variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The current value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool TryGetBoolVariable(string name, out bool value)
         {
             if (this.native.BaseApiGetBoolVariable(this.handle, name, out int val) != 0)
@@ -209,45 +147,26 @@
             return false;
         }
 
-        /// <summary>
-        ///     Attempts to retrieve the value for a double variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The current value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool TryGetDoubleVariable(string name, out double value)
         {
             return this.native.BaseApiGetDoubleVariable(this.handle, name, out value) != 0;
         }
 
-        /// <summary>
-        ///     Attempts to retrieve the value for an integer variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The current value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool TryGetIntVariable(string name, out int value)
         {
             return this.native.BaseApiGetIntVariable(this.handle, name, out value) != 0;
         }
 
-        /// <summary>
-        ///     Attempts to retrieve the value for a string variable.
-        /// </summary>
-        /// <param name="name">The name of the variable.</param>
-        /// <param name="value">The current value of the variable.</param>
-        /// <returns>Returns <c>True</c> if successful; otherwise <c>False</c>.</returns>
+        /// <inheritdoc />
         public bool TryGetStringVariable(string name, out string? value)
         {
             value = this.api.GetStringVariable(this.handle, name);
             return value != null;
         }
 
-        /// <summary>
-        ///     Attempts to print the variables to the file.
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool TryPrintVariablesToFile(string filename)
         {
             return this.native.BaseApiPrintVariablesToFile(this.handle, filename) != 0;
@@ -267,25 +186,13 @@
 
         private void Initialize()
         {
-            // do some minor processing on datapath to fix some common errors (this basically mirrors what tesseract does as of 3.04)
-            string dataPath = this.options.DataPath;
-            if (!string.IsNullOrEmpty(dataPath))
-            {
-                // remove any excess whitespace
-                dataPath = dataPath.Trim();
-
-                // remove any trialing '\' or '/' characters
-                if (dataPath.EndsWith('\\') || dataPath.EndsWith('/'))
-                    dataPath = dataPath.Substring(0, dataPath.Length - 1);
-            }
-
             var engineMode = (int)this.options.Mode;
             string language = this.options.Language;
             IEnumerable<string> configurationFiles = this.options.ConfigurationFiles;
             IDictionary<string, object> initialOptions = this.options.InitialOptions;
             bool setOnlyNonDebugVariables = this.options.SetOnlyNonDebugVariables;
 
-            int? result = this.api.Init(this.handle, dataPath, language, engineMode, configurationFiles, initialOptions, setOnlyNonDebugVariables);
+            int? result = this.api.Initialize(this.handle, this.options.DataPath, language, engineMode, configurationFiles, initialOptions, setOnlyNonDebugVariables);
             if (result is null or 0) return;
             // Special case logic to handle cleaning up as init has already released the handle if it fails.
             this.handle = new HandleRef(this, IntPtr.Zero);

@@ -131,7 +131,5 @@
         /// <param name="filename"></param>
         /// <returns></returns>
         bool TryPrintVariablesToFile(string filename);
-
-        event EventHandler<EventArgs> Disposed;
     }
 }

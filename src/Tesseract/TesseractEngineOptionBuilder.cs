@@ -48,15 +48,35 @@
 
         public TesseractEngineOptions Build()
         {
+            string sanitizedPath = this.GetSanitizedDataPath();
+
             return new TesseractEngineOptions
             {
-                DataPath = this.dataPath,
+                DataPath = sanitizedPath,
                 Language = this.language,
                 Mode = this.mode,
                 SetOnlyNonDebugVariables = this.setOnlyNonDebugVariables,
                 ConfigurationFiles = this.configFiles.AsReadOnly(),
                 InitialOptions = this.options.AsReadOnly()
             };
+        }
+
+        /// <summary>
+        ///     Does some minor processing on <seealso cref="dataPath" /> to fix some probable errors (this basically mirrors what tesseract does as of 3.04).
+        /// </summary>
+        /// <returns>Returns a value indicating a path that is safe to construct a <see cref="TesseractEngineOptions" /> object.</returns>
+        private string GetSanitizedDataPath()
+        {
+            string path = this.dataPath;
+            if (string.IsNullOrEmpty(path)) return this.dataPath;
+
+            string trimmedPath = path.Trim();
+
+            // remove any trialing '\' or '/' characters
+            if (trimmedPath.EndsWith('\\') || trimmedPath.EndsWith('/'))
+                return trimmedPath.Substring(0, trimmedPath.Length - 1);
+
+            return trimmedPath;
         }
     }
 }

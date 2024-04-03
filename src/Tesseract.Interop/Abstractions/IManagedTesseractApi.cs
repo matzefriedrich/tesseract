@@ -4,7 +4,7 @@
 
     public interface IManagedTesseractApi
     {
-        int? Init(HandleRef handle, string dataPath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams);
+        int? Initialize(HandleRef handle, string dataPath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams);
 
         int? SetDebugVariable(HandleRef handle, string name, string value);
 

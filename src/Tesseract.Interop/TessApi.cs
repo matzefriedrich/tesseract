@@ -91,7 +91,7 @@
             return result;
         }
 
-        public int? Init(HandleRef handle, string dataPath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams)
+        public int? Initialize(HandleRef handle, string dataPath, string language, int mode, IEnumerable<string> configFiles, IDictionary<string, object> initialValues, bool setOnlyNonDebugParams)
         {
             if (handle.Handle == IntPtr.Zero) throw new ArgumentException($"The given handle is invalid. Use {nameof(this.tesseractApiSignatures.BaseApiCreate)} to get one.");
             if (string.IsNullOrWhiteSpace(language)) throw new ArgumentException(Resources.Value_cannot_be_null_or_whitespace, nameof(language));
